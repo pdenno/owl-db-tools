@@ -10,3 +10,6 @@ pom.xml.asc
 /data/OWLdocs
 /database
 *~
+.cpcache
+data/DLP-CommonSenseMapping.ttl
+data/DOLCE-Lite.ttl

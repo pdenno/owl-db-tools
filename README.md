@@ -1,42 +1,93 @@
-# Facility - Ontology-based Component of Manufacturing Notebooks
+# owl-tools - a library for reading OWL into a Datahike database
 
-Facility is a demonstration web server to present ontology-based information about various manufacturing
-production facility resources and processes to an end user. It is intended to be used in conjunction with
-SPARQL queries and Jupyter notebooks supporting manufacturing processes and operations.
-The OWL ontology provided in this github repostiory is for demonstration purposes only.
+This library uses clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies 
+into a [Datahike](https://datahike.io/) database. 
 
-## Motivation and Approach
+The library is currently in its early stages of development, though it should be usable with not much effort. 
 
-As described in [1], mathematical models of production processes and operations can be
-verified more easily when they reference dimensionality and provenance information of data used in the analysis.
-[Jupyter notebooks](http://jupyter.org) can be integrated with an organization's knowledgebase of
-production properties and historical operational data to support this verification. The Facility
-software supports this usage of Jupyter notebooks with an HTTP server of ontology-based information
-that serves pages about the property dimenstionality and provenance based on an OWL ontology of
-such information. 
 
-## Installation 
+## Usage
 
-The following are three ways to run the server. 
+The file test/core_test.clj defines a complete example usage. 
+Essentially, you combine information about local schema (if any) that look, for example, like this:
 
-### Run from the clojure CLI
+```clojure
+  {;; Mine
+   "ops"   {:prefix "http://modelmeth.nist.gov/operations"
+            :access "data/operations.ttl"
+            :format :turtle :in-resources? true}
+			... more local file map entries.
+```
 
-1. [Install clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (and java if you haven't already).
-2. In a shell, in the git repository directory, type ```clj -A:dev```
-3. When the prompt ```user>``` appears, type ```(start)```
-4. Point the browser at localhost:3034
+with information about remote schema (if any), that look, for example, like this:
 
-### Create an uberjar
+```clojure
+    ["coll"  "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"]
+```
+You then define a database configure. There are several persistent DB options, but the 
+example in the test directory uses an in-memory database. 
+See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration) for 
+more information about this.
 
-1. [Install clojure](https://clojure.org/guides/getting_started#_clojure_installer_and_cli_tools) (and java if you haven't already).
-2. In a shell, in the git repository directory type ``` clj -X:uberjar :jar '"facility.jar"' :main-class gov.nist.mm.facility ```
-3. Run ```java -jar facility.jar :port 3034```
-4. Point the browser at localhost:3034
+With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
+Additional actions on the database are described in the (Datahike readme)[https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme]
+and (Datahike API docs)[https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api].
 
-### Run as a developer
 
-The program currently uses simple server-side rendering and [Mount](https://github.com/tolitius/mount), so you can simply start it in 
-your IDE and use ```(user/start)``` and ```(user/stop)```.
+## Database Schema
+
+The database is structured as shown. 
+Details about such  schema can be found in the [Datahike schema docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/schema). 
+
+```clojure
+(def owl-schema
+  [#:db{:ident :resource/id :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+   ;; multi-valued properties
+   #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/equivalentProperty :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/hasKey             :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/intersectionOf     :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/members            :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/onProperties       :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/oneOf              :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/propertyChainAxiom :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/sameAs             :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/someValuesFrom     :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/keyword} ; <--  Looks ok to me!
+   #:db{:ident :owl/withRestrictions   :cardinality :db.cardinality/many :valueType :db.type/keyword}
+
+   ;; single-valued properties
+   #:db{:ident :owl/backwardCompatibleWith :cardinality :db.cardinality/one :valueType :db.type/string}
+   #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number} ; was long
+   #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/disjointWith           :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/equivalentClass        :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/hasValue               :cardinality :db.cardinality/one :valueType :db.type/boolean}
+   #:db{:ident :owl/imports                :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number} ; was long
+   #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}
+
+   #:db{:ident :owl/string-val     :cardinality :db.cardinality/one :valueType :db.type/string}
+   #:db{:ident :owl/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/number-val     :cardinality :db.cardinality/one :valueType :db.type/number}
+   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])   
+
+(def rdfs-schema
+  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :rdfs/range         :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
+   #:db{:ident :rdfs/label         :cardinality :db.cardinality/many :valueType :db.type/string}
+   #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
+   #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/keyword}])
+
+(def rdf-schema
+  [#:db{:ident :rdf/type :cardinality :db.cardinality/one :valueType :db.type/keyword}])
+```
 
 
 ## Disclaimer
@@ -51,14 +102,6 @@ NIST-developed software is provided by NIST as a public service. You may use, co
 NIST-developed software is expressly provided “AS IS.” NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
 
 You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
-
-## Credits
-
-Peter Denno 
-
-April Nellis 
-
-Ibrahim Asouroko
 
 
 ## References
