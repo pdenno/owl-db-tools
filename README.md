@@ -12,17 +12,18 @@ The file test/core_test.clj defines a complete example usage.
 Essentially, you combine information about local schema (if any) that look, for example, like this:
 
 ```clojure
-  {;; Mine
+  {;; My local ontology files...
    "ops"   {:prefix "http://modelmeth.nist.gov/operations"
             :access "data/operations.ttl"
             :format :turtle :in-resources? true}
-			... more local file map entries.
+			... more local file map entries. }
 ```
 
 with information about remote schema (if any), that look, for example, like this:
 
 ```clojure
-    ["coll"  "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"]
+   [ ["coll"  "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"]
+    ... more remote files (each a vector of two element: a short name for DB URLs and complete URL to the file).]
 ```
 You then define a database configure. There are several persistent DB options, but the 
 example in the test directory uses an in-memory database. 
@@ -30,8 +31,8 @@ See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikati
 more information about this.
 
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
-Additional actions on the database are described in the (Datahike readme)[https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme]
-and (Datahike API docs)[https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api].
+Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
+and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
 
 
 ## Database Schema
@@ -102,7 +103,6 @@ NIST-developed software is provided by NIST as a public service. You may use, co
 NIST-developed software is expressly provided “AS IS.” NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
 
 You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
-
 
 ## References
 
