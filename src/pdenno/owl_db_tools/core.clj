@@ -1,4 +1,4 @@
-(ns pdenno.owl-tools.core
+(ns pdenno.owl-db-tools.core
   "Load the datahike database from JENA content; define pathom resolvers."
   (:require
    [cheshire.core]
@@ -419,7 +419,7 @@
     (if (string? (deref p timeout false)) true false)))
 
 (defn create-db!
-  "if :owl-tools/rebuild? is true, .read .owl with JENA and write it into a Datahike DB. 
+  "if rebuild? is true, .read .owl with JENA and write it into a Datahike DB. 
    Otherwise just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
   [db-cfg onto-sources & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]

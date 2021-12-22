@@ -1,4 +1,4 @@
-# owl-tools - a library for reading OWL into a Datahike database
+# owl-db-tools - a library for reading OWL into a Datahike database
 
 This library uses clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies 
 into a [Datahike](https://datahike.io/) database. 
@@ -33,12 +33,12 @@ exist to run the test.
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db
-             :owl-tools/rebuild-db? true
+             :owl-db-tools/rebuild-db? true
              :keep-history? false
              :schema-flexibility :write})
 ```
 
-If `:owl-tools/rebuild-db?` is `false`, then presumably you've already created a DB. In this case, 
+If `:owl-db-tools/rebuild-db?` is `false`, then presumably you've already created a DB. In this case, 
 
 
 See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration) for 
@@ -59,20 +59,21 @@ and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/da
 ### Queries
 
 For the most part, you would use Datahike's query and pull for APIs to access the data. 
-For example, you can retrieve all the classes from the DOLCE namespace in the example as follows:
+For example, you can retrieve all the classes from the DOLCE namespace using a datalog query such as the following:
 
 ```clojure
+(require '[pdenno.owl-db-tools.core :as owl])
+
 (->> (d/q '[:find [?v ...]  :where [_ :resource/id ?v]] @conn) 
     (filter #(= "dol" (namespace %))) sort)
-	
-; Returns 	
+
+; Returns
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
 ```
 
-However, the library also provides `pull-resource` which takes the `:resource/id` and the database connection. 
+However, the library also provides `pull-resource` which takes the `:resource/id` and the database connection.
 
 ```clojure
-(require '[pdenno.owl-tools.core :as owl])
 (owl/pull-resource :dol/state conn)
 
 ; Returns
@@ -81,7 +82,6 @@ However, the library also provides `pull-resource` which takes the `:resource/id
  :rdfs/comment  ["Within stative occurrences, we distinguish between  states and ..."],
  :rdfs/subClassOf [:dol/stative],
  :resource/id :dol/state}
-
 ```
 
 ## Database Schema

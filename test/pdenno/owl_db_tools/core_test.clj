@@ -1,9 +1,9 @@
-(ns pdenno.owl-tools.core-test
+(ns pdenno.owl-db-tools.core-test
   (:require
    [clojure.test :refer  [deftest is testing]]
    [datahike.api          :as d]
    [datahike.pull-api     :as dp]
-   [pdenno.owl-tools.core :as owl]))
+   [pdenno.owl-db-tools.core :as owl]))
 
 ;;; ToDo:
 ;;;   - Determine what happened to "cause" "sem" (see missing-ontology?)
@@ -86,4 +86,3 @@
        (is (= (d/database-exists? db-cfg) true))
        (is (= [:dol/stative]
               (-> (owl/pull-resource :dol/state conn) :rdfs/subClassOf))))))
-
