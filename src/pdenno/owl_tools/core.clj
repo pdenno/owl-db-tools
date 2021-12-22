@@ -17,8 +17,6 @@
 
 ;;; ToDo:
 ;;;   - I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.
-;;;   - Determine what happened to "cause" "sem" (see missing-ontology?)
-;;;      Answer: "sem" triples exist:  [:sem/code-role :edns/defined-by :sem/s-communication-theory]
 
 (defonce conn nil) ; "The connection to the database"
 (def diag (atom nil))

@@ -90,6 +90,14 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
   [#:db{:ident :rdf/type :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 ```
 
+## To Do
+
+The library isn't quite a proper clojure library yet: 
+(1) it does logging (using timbre), and 
+(2) there is not yet a distributed jar file (on clojars). 
+
+Some simplification of the database to a more usable logical structure might be in order. 
+For example, I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.
 
 ## Disclaimer
 The use of any software or hardware by the project does not imply a recommendation or endorsement by NIST.

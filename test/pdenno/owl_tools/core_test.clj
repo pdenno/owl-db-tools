@@ -3,6 +3,10 @@
    [clojure.test :refer  [deftest is testing]]
    [pdenno.owl-tools.core :as owl]))
 
+;;; ToDo:
+;;;   - Determine what happened to "cause" "sem" (see missing-ontology?)
+;;;      Answer: "sem" triples exist:  [:sem/code-role :edns/defined-by :sem/s-communication-theory]
+
 (def db-cfg {:store {:backend :file :path "database"}
              :mine/rebuild-db? true
              :keep-history? false
