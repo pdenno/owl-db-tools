@@ -62,19 +62,19 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
    #:db{:ident :owl/propertyChainAxiom :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :owl/sameAs             :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :owl/someValuesFrom     :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/keyword} ; <--  Looks ok to me!
+   #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :owl/withRestrictions   :cardinality :db.cardinality/many :valueType :db.type/keyword}
 
    ;; single-valued properties
    #:db{:ident :owl/backwardCompatibleWith :cardinality :db.cardinality/one :valueType :db.type/string}
-   #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number} ; was long
+   #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/disjointWith           :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/equivalentClass        :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/hasValue               :cardinality :db.cardinality/one :valueType :db.type/boolean}
    #:db{:ident :owl/imports                :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number} ; was long
+   #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}
 
