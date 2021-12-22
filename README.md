@@ -59,7 +59,7 @@ and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/da
 ### Queries
 
 For the most part, you would use Datahike's query and pull for APIs to access the data. 
-For example, you can retrieve all the classes from the DOLCE namespace using a datalog query such as the following:
+For example, you can retrieve all the classes from the DOLCE namespace in the example in the test directory using a datalog query such as the following:
 
 ```clojure
 (require '[pdenno.owl-db-tools.core :as owl])
