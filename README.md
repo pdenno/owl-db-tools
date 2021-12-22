@@ -8,6 +8,8 @@ The library is currently in its early stages of development, though it should be
 
 ## Usage
 
+### Creating the database
+
 The file test/core_test.clj defines a complete example usage. 
 Essentially, you combine information about local schema (if any) that look, for example, like this:
 
@@ -26,20 +28,61 @@ with information about remote schema (if any), that look, for example, like this
     ... more remote files (each a vector of two element: a short name for DB URLs and complete URL to the file).]
 ```
 You then define a database configure. There are several persistent DB options, but the 
-example in the test directory uses an in-memory database. 
+example in the test directory writes a file-based DB to a path `/tmp/datahike-owl-db` that must
+exist to run the test. 
+
+```clojure
+(def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db
+             :owl-tools/rebuild-db? true
+             :keep-history? false
+             :schema-flexibility :write})
+```
+
+If `:owl-tools/rebuild-db?` is `false`, then presumably you've already created a DB. In this case, 
+
+
 See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration) for 
-more information about this.
+more information about database backend options.
 
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
 This function takes optional keyword arguments:
 
+ * `:rebuild?` if `true` reads the sources, otherwise presumably the database exists and a connection to it is returned.
  * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies. 
- You can use this to abort reading when a source site is not available.
+ You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true. 
  * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
+   This can be used only when `rebuild?` is true. 
 
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
 
+### Queries
+
+For the most part, you would use Datahike's query and pull for APIs to access the data. 
+For example, you can retrieve all the classes from the DOLCE namespace in the example as follows:
+
+```clojure
+(->> (d/q '[:find [?v ...]  :where [_ :resource/id ?v]] @conn) 
+    (filter #(= "dol" (namespace %))) sort)
+	
+; Returns 	
+(:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
+```
+
+However, the library also provides `pull-resource` which takes the `:resource/id` and the database connection. 
+
+```clojure
+(require '[pdenno.owl-tools.core :as owl])
+(owl/pull-resource :dol/state conn)
+
+; Returns
+{:db/id 717,
+ :rdf/type :owl/Class,
+ :rdfs/comment  ["Within stative occurrences, we distinguish between  states and ..."],
+ :rdfs/subClassOf [:dol/stative],
+ :resource/id :dol/state}
+
+```
 
 ## Database Schema
 

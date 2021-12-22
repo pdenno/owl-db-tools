@@ -1,6 +1,8 @@
 (ns pdenno.owl-tools.core-test
   (:require
    [clojure.test :refer  [deftest is testing]]
+   [datahike.api          :as d]
+   [datahike.pull-api     :as dp]
    [pdenno.owl-tools.core :as owl]))
 
 ;;; ToDo:
@@ -8,7 +10,6 @@
 ;;;      Answer: "sem" triples exist:  [:sem/code-role :edns/defined-by :sem/s-communication-theory]
 
 (def db-cfg {:store {:backend :file :path "database"}
-             :mine/rebuild-db? true
              :keep-history? false
              :schema-flexibility :write})
 
@@ -78,4 +79,11 @@
 
 (deftest reading-owl
   (testing "Read a substantial amount of owl."
-    (is (= :success (owl/create-db! db-cfg onto-sources :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])))))
+     (owl/create-db! db-cfg onto-sources
+                     :rebuild? true
+                     :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
+     (let [conn (owl/create-db! db-cfg nil)]
+       (is (= (d/database-exists? db-cfg) true))
+       (is (= [:dol/stative]
+              (-> (owl/pull-resource :dol/state conn) :rdfs/subClassOf))))))
+

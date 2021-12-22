@@ -418,27 +418,27 @@
     (future (deliver p (slurp url)))
     (if (string? (deref p timeout false)) true false)))
 
-(def diag-jena-maps (atom nil))
-
 (defn create-db!
-  "Read .owl with JENA and write it into a Datahike DB if :mine/rebuild? is true.
+  "if :owl-tools/rebuild? is true, .read .owl with JENA and write it into a Datahike DB. 
    Otherwise just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
-  [db-cfg onto-sources & {:keys [check-sites check-sites-timeout] :or {check-sites-timeout 15000}}]
+  [db-cfg onto-sources & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
   (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout)  check-sites) true)]
     (set-onto-atoms! onto-sources)
-    (cond (and (:mine/rebuild-db? db-cfg) site-ok?)
+    (cond (and rebuild? site-ok?)
           (let [jena-maps  (-> (load-kb (reduce-kv (fn [m k v] (if (:access v) (assoc m k v) m)) {} onto-sources))
                                (sparql/query '((?/x ?/y ?/z))))]
-            #_(reset! diag-jena-maps jena-maps)
             (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
             (d/create-database db-cfg)
             (alter-var-root (var conn) (fn [_] (d/connect db-cfg)))
             (store-onto! conn jena-maps)
             (log/info "Created schema DB")
-            :success)
+            conn)
           (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
-          (d/database-exists? db-cfg) (alter-var-root (var conn) (fn [_] (d/connect db-cfg))),
+          (d/database-exists? db-cfg)
+          (do 
+            (alter-var-root (var conn) (fn [_] (d/connect db-cfg)))
+            conn)
           :else (log/warn "There is no DB to connect to."))))
 
 ;;; =============== Access ===========================================
