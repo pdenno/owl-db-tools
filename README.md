@@ -31,6 +31,12 @@ See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikati
 more information about this.
 
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
+This function takes optional keyword arguments:
+
+ * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies. 
+ You can use this to abort reading when a source site is not available.
+ * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
+
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
 
@@ -94,7 +100,7 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
 
 The library isn't quite a proper clojure library yet: 
 (1) it does logging (using timbre), and 
-(2) there is not yet a distributed jar file (on clojars). 
+(2) there is not yet a distributed jar file (e.g. on clojars). 
 
 Some simplification of the database to a more usable logical structure might be in order. 
 For example, I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.

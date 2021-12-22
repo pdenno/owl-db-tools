@@ -78,4 +78,4 @@
 
 (deftest reading-owl
   (testing "Read a substantial amount of owl."
-    (is (= :success (owl/create-db! db-cfg onto-sources)))))
+    (is (= :success (owl/create-db! db-cfg onto-sources :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])))))
