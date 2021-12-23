@@ -17,9 +17,19 @@
 
 ;;; ToDo:
 ;;;   - I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.
+;;;   - Is 'learned-schema' is a throwaway I can put somewhere else?
 
 (defonce conn nil) ; "The connection to the database"
 (def diag (atom nil))
+
+(def default-prefixes
+   {"daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
+    "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
+    "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
+    "rdf"   {:uri "http://www.w3.org/1999/02/22-rdf-syntax-ns" :ref-only? true},
+    "rdfs"  {:uri "http://www.w3.org/2000/01/rdf-schema"       :ref-only? true},
+    "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
+    "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}})
 
 (def multi-valued-property?
   "Properties where the object can have many values
@@ -110,27 +120,27 @@
    Return nil if you can't load from the :access URL, otherwise return the stream."
   [src & {:keys [timeout] :or {timeout 10000}}]
   (let [p (promise)]
-    (future (deliver p (-> src :access slurp .getBytes ByteArrayInputStream.)))
+    (future (deliver p (-> src :uri slurp .getBytes ByteArrayInputStream.)))
     (if-let [result (deref p timeout nil)]
       result
       (do
         (reset! loaded-ok? false)
-        (log/error "Timeout: Failed to access" (:access src))))))
+        (log/error "Timeout: Failed to access" (:uri src))))))
 
 (def long2short "This is used to replace long URI in resources with prefixes." (atom nil))
 (def names-an-onto? (atom nil))
 
 (defn set-long2short!
-  [onto-sources]
-  (->> onto-sources
-      (reduce-kv (fn [m k v] (assoc m k (:prefix v))) {})
+  [ontos]
+  (->> ontos
+      (reduce-kv (fn [m k v] (assoc m k (:uri v))) {})
       set/map-invert
       (reset! long2short)))
 
 (defn set-onto-atoms!
   "Initialize an atom to a set of strings naming ontologies used and things from rdf-ordinary list"
-  [onto-sources]
-  (set-long2short! onto-sources)
+  [ontos]
+  (set-long2short! ontos)
   (->> @long2short
        keys
        (map #(let [cnt (count %)] (if (= \# (nth % (dec cnt))) (subs % 0 (dec cnt)) %)))
@@ -144,11 +154,9 @@
   (let [kb (kb/kb :jena-mem)]
     (dorun (map (fn [src]
                   (when @loaded-ok?
-                    (log/info "Loading" (:access src))
-                    (let [stream (if (:in-resources? src)
-                                   (load-local src)
-                                   (load-remote src))]
-                      (when stream (rdf/load-rdf kb stream (:format src))))))
+                    (log/info "Loading" (:uri src))
+                    (when-let [stream (if (:access src) (load-local src) (load-remote src))]
+                       (rdf/load-rdf kb stream (or (:format src) :rdfxml)))))
                 (vals ontos)))
     ;; If you do the sync, some resources won't print namespace-qualified in sparql queries.
     ;; It will be correct in the JENA DB, just not printed. More on this (possibly related!):
@@ -422,11 +430,12 @@
   "if rebuild? is true, .read .owl with JENA and write it into a Datahike DB. 
    Otherwise just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
-  [db-cfg onto-sources & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
-  (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout)  check-sites) true)]
-    (set-onto-atoms! onto-sources)
+  [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
+  (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout)  check-sites) true)
+        all-ontos (merge default-prefixes ontos)]
+    (set-onto-atoms! all-ontos)
     (cond (and rebuild? site-ok?)
-          (let [jena-maps  (-> (load-kb (reduce-kv (fn [m k v] (if (:access v) (assoc m k v) m)) {} onto-sources))
+          (let [jena-maps  (-> (load-kb (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} all-ontos))
                                (sparql/query '((?/x ?/y ?/z))))]
             (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
             (d/create-database db-cfg)
@@ -441,11 +450,9 @@
             conn)
           :else (log/warn "There is no DB to connect to."))))
 
-;;; =============== Access ===========================================
-;;; {:db/id 3779}
-;;; This seems to cause problems in recursive resolution. (See resolve-db-id)"
 (defn db-ref?
-  "It looks to me that a datahike ref is a map with exactly one key: :db/id."
+  "Return true if to object is a :db/id
+   (It looks to me that a datahike ref is a map with exactly one key: :db/id.)"
   [obj]
   (and (map? obj) (= [:db/id] (keys obj))))
 

@@ -8,46 +8,64 @@ The library is currently in its early stages of development, though it should be
 
 ## Usage
 
-### Creating the database
+There are three steps to getting started: 
+   1. configuring the database,
+   2. specifying the data to store, and
+   3. creating the database. 
 
-The file test/core_test.clj defines a complete example usage. 
-Essentially, you combine information about local schema (if any) that look, for example, like this:
+### Configuring the database
 
-```clojure
-  {;; My local ontology files...
-   "ops"   {:prefix "http://modelmeth.nist.gov/operations"
-            :access "data/operations.ttl"
-            :format :turtle :in-resources? true}
-			... more local file map entries. }
-```
+There are several persistent DB options, but the example shown here writes a persistent file-based DB to a path `/tmp/datahike-owl-db`.
 
-with information about remote schema (if any), that look, for example, like this:
-
-```clojure
-   [ ["coll"  "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"]
-    ... more remote files (each a vector of two element: a short name for DB URLs and complete URL to the file).]
-```
-You then define a database configure. There are several persistent DB options, but the 
-example in the test directory writes a file-based DB to a path `/tmp/datahike-owl-db` that must
-exist to run the test. 
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db
-             :owl-db-tools/rebuild-db? true
              :keep-history? false
              :schema-flexibility :write})
 ```
-
-If `:owl-db-tools/rebuild-db?` is `false`, then presumably you've already created a DB. In this case, 
-
-
 See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration) for 
 more information about database backend options.
 
+
+### Specifying the data to store
+
+Data sources are defined as map entries in maps keyed by prefix that is used as the namespace of a keywords naming each resource associated with the 
+sources URI. For example the following defines two sources. 
+
+```clojure
+(def onto-sources
+  {"dol"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
+   "mod"   {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle}})
+```
+Thus resources http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state. 
+The following keywords are used in the sources
+ * `:uri` the URI of the OWL file to be read, 
+ * `:access` a pathname to a local copy of the OWL file (for use with content that doesn't have a URI for whatever reason).
+ * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only 
+ two tested are :rdfxml and :turtle. 
+ * `:ref-only?` this is used suppress reading content but nonethess establish a relationship between a namespace prefix and a URI.
+ There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above).
+ 
+ ```clojure
+{   "daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
+   "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
+   "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
+   "rdf"   {:uri "http://www.w3.org/1999/02/22-rdf-syntax-ns" :ref-only? true},
+   "rdfs"  {:uri "http://www.w3.org/2000/01/rdf-schema"       :ref-only? true},
+   "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
+   "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
+ ```
+
+
+### Creating the Database
+
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
-This function takes optional keyword arguments:
+In the call provide the configuration and sources as dicussed above. (See `core_test.clj` for an example.)
+
+The function takes the following optional keyword arguments:
 
  * `:rebuild?` if `true` reads the sources, otherwise presumably the database exists and a connection to it is returned.
+
  * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies. 
  You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true. 
  * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
@@ -141,25 +159,15 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
 
 ## To Do
 
-The library isn't quite a proper clojure library yet: 
-(1) it does logging (using timbre), and 
-(2) there is not yet a distributed jar file (e.g. on clojars). 
+* There is not yet a distributed jar file (e.g. on clojars). 
 
-Some simplification of the database to a more usable logical structure might be in order. 
-For example, I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.
+* Some simplification of the database to a more usable logical structure might be in order. 
+  For example, I don't think there is any reason to have :temp/ resources. 
+  In this regard I've only eliminated :rdf/List so far. 
 
 ## Disclaimer
-The use of any software or hardware by the project does not imply a recommendation or endorsement by NIST.
 
-The use of the project results in other software or hardware products does not imply a recommendation or endorsement by NIST of those products.
-
-We would appreciate acknowledgement if any of the project results are used, however, the use of the NIST logo is not allowed.
-
-NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.
-
-NIST-developed software is expressly provided “AS IS.” NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
-
-You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
+This software was developed by [NIST](http://nist/gov). [This disclaimer](https://www.nist.gov/el/software-disclaimer) applies. 
 
 ## References
 
