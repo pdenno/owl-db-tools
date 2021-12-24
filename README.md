@@ -19,7 +19,7 @@ There are several persistent DB options described in the [Datahike database conf
 The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-db`.
 
 ```clojure
-(def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db
+(def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
              :keep-history? false
              :schema-flexibility :write})
 ```
@@ -29,8 +29,8 @@ more information about database backend options.
 
 ### Specifying the data to store
 
-Data sources are defined as map entries in maps keyed by prefix that is used as the namespace of a keywords naming each resource associated with the 
-sources URI. For example the following defines two sources; 
+Data sources are defined as map entries in nested maps keyed by a prefix (strign) that is used as the namespace of a keywords naming each resource associated with the sources URI.
+For example, the following defines two sources; 
 the first is DOLCE-Lite, retrieved from a remote location;
 the second is a local ontology in turtle syntax. 
 
@@ -53,13 +53,13 @@ The following keywords are used in the sources
  There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above):
  
  ```clojure
-{  "daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
-   "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
-   "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
-   "rdf"   {:uri "http://www.w3.org/1999/02/22-rdf-syntax-ns" :ref-only? true},
-   "rdfs"  {:uri "http://www.w3.org/2000/01/rdf-schema"       :ref-only? true},
-   "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
-   "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
+{"daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
+ "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
+ "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
+ "rdf"   {:uri "http://www.w3.org/1999/02/22-rdf-syntax-ns" :ref-only? true},
+ "rdfs"  {:uri "http://www.w3.org/2000/01/rdf-schema"       :ref-only? true},
+ "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
+ "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
  ```
 
 
@@ -69,11 +69,11 @@ With the database configured and the source defined as described above, you then
 In the call provide the configuration and sources as dicussed above. (See `core_test.clj` for an example.)
 
 ```clojure
-     (require '[pdenno.owl-db-tools.core :as owl])
+(require '[pdenno.owl-db-tools.core :as owl])
 
-     (owl/create-db! db-cfg onto-sources
-                     :rebuild? true
-                     :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
+(owl/create-db! db-cfg onto-sources
+                :rebuild? true
+                :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
 ```
 
 The function create-db! takes the following optional keyword arguments:
