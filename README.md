@@ -15,39 +15,45 @@ There are three steps to getting started:
 
 ### Configuring the database
 
-There are several persistent DB options, but the example shown here writes a persistent file-based DB to a path `/tmp/datahike-owl-db`.
-
+There are several persistent DB options described in the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration).
+The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-db`.
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db
              :keep-history? false
              :schema-flexibility :write})
 ```
-See the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration) for 
+See the  for 
 more information about database backend options.
 
 
 ### Specifying the data to store
 
 Data sources are defined as map entries in maps keyed by prefix that is used as the namespace of a keywords naming each resource associated with the 
-sources URI. For example the following defines two sources. 
+sources URI. For example the following defines two sources; 
+the first is DOLCE-Lite, retrieved from a remote location;
+the second is a local ontology in turtle syntax. 
 
 ```clojure
 (def onto-sources
   {"dol"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
    "mod"   {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle}})
 ```
-Thus resources http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state. 
+
+The key of the outer map defines a shortname for the resource; it provides a namespace for unique identifiers used in the DB in lieu of the IRI string. 
+The value of the outer map is a map providing the details about the source file to be read. The map keys are defined below. 
+In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state. 
+
 The following keywords are used in the sources
  * `:uri` the URI of the OWL file to be read, 
- * `:access` a pathname to a local copy of the OWL file (for use with content that doesn't have a URI for whatever reason).
+ * `:access` a pathname to a local copy of the OWL file (for use where it won't be found at the provided URI, for example).
  * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only 
  two tested are :rdfxml and :turtle. 
  * `:ref-only?` this is used suppress reading content but nonethess establish a relationship between a namespace prefix and a URI.
- There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above).
+ There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above):
  
  ```clojure
-{   "daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
+{  "daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
    "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
    "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
    "rdf"   {:uri "http://www.w3.org/1999/02/22-rdf-syntax-ns" :ref-only? true},
@@ -62,14 +68,22 @@ The following keywords are used in the sources
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
 In the call provide the configuration and sources as dicussed above. (See `core_test.clj` for an example.)
 
-The function takes the following optional keyword arguments:
+```clojure
+     (require '[pdenno.owl-db-tools.core :as owl])
+
+     (owl/create-db! db-cfg onto-sources
+                     :rebuild? true
+                     :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
+```
+
+The function create-db! takes the following optional keyword arguments:
 
  * `:rebuild?` if `true` reads the sources, otherwise presumably the database exists and a connection to it is returned.
 
  * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies. 
  You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true. 
  * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
-   This can be used only when `rebuild?` is true. 
+   Of course, this argument is relevant only when `rebuild?` is true. 
 
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
@@ -80,10 +94,10 @@ For the most part, you would use Datahike's query and pull for APIs to access th
 For example, you can retrieve all the classes from the DOLCE namespace in the example in the test directory using a datalog query such as the following:
 
 ```clojure
-(require '[pdenno.owl-db-tools.core :as owl])
+    (require '   [datahike.api          :as d])
 
-(->> (d/q '[:find [?v ...]  :where [_ :resource/id ?v]] @conn) 
-    (filter #(= "dol" (namespace %))) sort)
+    (->> (d/q '[:find [?v ...]  :where [_ :resource/id ?v]] @conn) 
+         (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
