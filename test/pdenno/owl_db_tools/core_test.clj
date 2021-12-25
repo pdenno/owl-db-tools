@@ -1,6 +1,7 @@
 (ns pdenno.owl-db-tools.core-test
   (:require
    [clojure.test :refer  [deftest is testing]]
+   [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
    [pdenno.owl-db-tools.core :as owl]))
 
@@ -42,3 +43,10 @@
        (is (= (d/database-exists? db-cfg) true))
        (is (= [:dol/stative]
               (-> (owl/pull-resource :dol/state conn) :rdfs/subClassOf))))))
+
+(defn small-test
+  []
+  (owl/create-db!
+   {:store {:backend :mem} :keep-history? false :schema-flexibility :write}
+   {"dol" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"}}
+   :rebuild? true))

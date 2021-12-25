@@ -29,7 +29,7 @@ more information about database backend options.
 
 ### Specifying the data to store
 
-Data sources are defined as map entries in nested maps keyed by a prefix (strign) that is used as the namespace of a keywords naming each resource associated with the sources URI.
+Data sources are defined as map entries in nested maps keyed by a prefix (string) that is used as the namespace of a keywords naming each resource associated with the sources URI.
 For example, the following defines two sources; 
 the first is DOLCE-Lite, retrieved from a remote location;
 the second is a local ontology in turtle syntax. 
@@ -37,14 +37,14 @@ the second is a local ontology in turtle syntax.
 ```clojure
 (def onto-sources
   {"dol"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
-   "mod"   {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle}})
+   "mod"   {:uri "http://modelmeth.nist.gov/modeling", :access "data/modeling.ttl", :format :turtle}})
 ```
 
 The key of the outer map defines a shortname for the resource; it provides a namespace for unique identifiers used in the DB in lieu of the IRI string. 
 The value of the outer map is a map providing the details about the source file to be read. The map keys are defined below. 
 In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state. 
 
-The following keywords are used in the sources
+The following keywords are used in the sources:
  * `:uri` the URI of the OWL file to be read, 
  * `:access` a pathname to a local copy of the OWL file (for use where it won't be found at the provided URI, for example).
  * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only 
@@ -52,7 +52,7 @@ The following keywords are used in the sources
  * `:ref-only?` this is used suppress reading content but nonethess establish a relationship between a namespace prefix and a URI.
  There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above):
  
- ```clojure
+```clojure
 {"daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
  "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
  "owl"   {:uri "http://www.w3.org/2002/07/owl"              :ref-only? true},
@@ -60,13 +60,12 @@ The following keywords are used in the sources
  "rdfs"  {:uri "http://www.w3.org/2000/01/rdf-schema"       :ref-only? true},
  "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
  "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
- ```
+```
 
 
 ### Creating the Database
 
-With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)```. 
-In the call provide the configuration and sources as dicussed above. (See `core_test.clj` for an example.)
+With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a call to a connection to the database. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. 
 
 ```clojure
 (require '[pdenno.owl-db-tools.core :as owl])
@@ -94,16 +93,17 @@ For the most part, you would use Datahike's query and pull for APIs to access th
 For example, you can retrieve all the classes from the DOLCE namespace in the example in the test directory using a datalog query such as the following:
 
 ```clojure
-    (require '   [datahike.api          :as d])
+(require '[datahike.api :as d])
 
-    (->> (d/q '[:find [?v ...]  :where [_ :resource/id ?v]] @conn) 
-         (filter #(= "dol" (namespace %))) sort)
+(->> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @conn) 
+     (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
 ```
 
-However, the library also provides `pull-resource` which takes the `:resource/id` and the database connection.
+However, the library also provides `pull-resource` which takes as arguments a resource-id and a database connection.
+It returns a map of all the triples associated with the resource-id
 
 ```clojure
 (owl/pull-resource :dol/state conn)
@@ -124,6 +124,7 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
 ```clojure
 (def owl-schema
   [#:db{:ident :resource/id :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+  
    ;; multi-valued properties
    #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}

@@ -56,7 +56,9 @@
 ;;; a unique key to an entity. There is a bijection between :resource/id and :db/id
 ;;; The types of things are defined in https://www.w3.org/TR/2012/REC-owl2-quick-reference-20121211/
 (def owl-schema
-  [#:db{:ident :resource/id :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+  [#:db{:ident :resource/id  :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+   #:db{:ident :resource/ref :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   
    ;; multi-valued properties
    #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
@@ -96,7 +98,8 @@
    #:db{:ident :rdfs/range         :cardinality :db.cardinality/many :valueType :db.type/keyword}
    #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/many :valueType :db.type/string}
-   #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/ref} ; Was keyword. Example of need to box those.
+   
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
    #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/keyword}])
 
@@ -131,6 +134,7 @@
 (def names-an-onto? (atom nil))
 
 (defn set-long2short!
+  "Initialize an atom to a map of URIs to short names."
   [ontos]
   (->> ontos
       (reduce-kv (fn [m k v] (assoc m k (:uri v))) {})
@@ -138,7 +142,7 @@
       (reset! long2short)))
 
 (defn set-onto-atoms!
-  "Initialize an atom to a set of strings naming ontologies used and things from rdf-ordinary list"
+  "Initialize an atom to a set of strings naming ontologies used."
   [ontos]
   (set-long2short! ontos)
   (->> @long2short
@@ -147,17 +151,15 @@
        set
        (reset! names-an-onto?)))
                       
-(defn load-kb
-  "Return an rdf/KB object with the argument ontologies loaded."
-  [ontos]
+(defn load-jena
+  "Using JENA, return an rdf/KB object with the argument ontologies loaded."
+  [{:keys [uri access format] :as src}]
   (log/info "(Re)loading ontologies.")
   (let [kb (kb/kb :jena-mem)]
-    (dorun (map (fn [src]
-                  (when @loaded-ok?
-                    (log/info "Loading" (:uri src))
-                    (when-let [stream (if (:access src) (load-local src) (load-remote src))]
-                       (rdf/load-rdf kb stream (or (:format src) :rdfxml)))))
-                (vals ontos)))
+    (when @loaded-ok?
+      (log/info "Loading" uri))
+    (when-let [stream (if access (load-local src) (load-remote src))]
+      (rdf/load-rdf kb stream (or format :rdfxml)))
     ;; If you do the sync, some resources won't print namespace-qualified in sparql queries.
     ;; It will be correct in the JENA DB, just not printed. More on this (possibly related!):
     ;;    (1) https://github.com/drlivingston/kr
@@ -327,7 +329,7 @@
   [v]
   (letfn [(b-val [x]
             (cond (string? x)  {:owl/string-val x}
-                  (keyword? x) {:owl/keyword-val x}
+                  (keyword? x) {:resource/ref x} ; POD was :owl/keyword-val
                   (number? x)  {:owl/number-val x}
                   (boolean? x) {:owl/boolean-val x}))]
     (if (coll? v)
@@ -404,19 +406,35 @@
                     :else obj))]
       (mapv rt-aux perm-data))))
 
+(defn resource-entities
+  "Return a vector of DB entities (maps) for {:resource/id <keyword>} for
+   every reference to something that should be defined in this ontology.
+   These will have to be transacted prior to the argument dmap."
+  [dmap short-name]
+  (let [names (atom #{})]
+    (letfn [(r-a-aux [obj]
+              (cond
+                (and (keyword? obj) (= short-name (namespace obj))) (swap! names #(conj % obj)),
+                (vector? obj) (map r-a-aux obj),
+                (map? obj) (map r-a-aux (vals obj))))]
+      (r-a-aux dmap)
+      (mapv (fn [x] {:resource/id x}) @names))))
+
 (defn store-onto!
   "Transform RDF triples in argument jena-maps, resolve rdf/List, create maps of resources. 
    Then store it." 
-  [conn jena-maps]
+  [conn jena-maps short-name]
    (let [dvecs (mapv #(keywordize-triple % :long2short long2short) jena-maps)
          learned-schema (learn-schema dvecs)
+         ;; ToDo: I think a merge would be safer here. Also report what is learned and differences.
          schema (reduce #(into %1 %2) learned-schema [owl-schema rdfs-schema rdf-schema])
          rdf-list-map (rdf-list-map dvecs)
          dmaps (->> (triples2maps dvecs rdf-list-map learned-schema)
                     (reduce-kv (fn [res k v] (conj res (assoc v :resource/id k))) [])
-                    #_resolve-temps)]
+                    resolve-temps)]
      (binding [log/*config* (assoc log/*config* :min-level :info)]
        (d/transact conn schema)
+       (d/transact conn (resource-entities dmaps short-name))
        (d/transact conn dmaps))))
 
 (defn site-online?
@@ -426,23 +444,30 @@
     (future (deliver p (slurp url)))
     (if (string? (deref p timeout false)) true false)))
 
+(def diag-jena (atom nil))
+
 (defn create-db!
-  "if rebuild? is true, .read .owl with JENA and write it into a Datahike DB. 
-   Otherwise just set the connection atom, conn.
+  "If rebuild? is true, read OWL with JENA and write it into a Datahike DB. 
+   Otherwise, just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
   [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
-  (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout)  check-sites) true)
-        all-ontos (merge default-prefixes ontos)]
+  (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)
+        all-ontos  (merge default-prefixes ontos)
+        load-ontos (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} all-ontos)]
     (set-onto-atoms! all-ontos)
     (cond (and rebuild? site-ok?)
-          (let [jena-maps  (-> (load-kb (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} all-ontos))
-                               (sparql/query '((?/x ?/y ?/z))))]
-            (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
-            (d/create-database db-cfg)
-            (alter-var-root (var conn) (fn [_] (d/connect db-cfg)))
-            (store-onto! conn jena-maps)
-            (log/info "Created schema DB")
-            conn)
+          (do (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
+              (d/create-database db-cfg)
+              (log/info "Created schema DB")
+              (alter-var-root (var conn) (fn [_] (d/connect db-cfg)))
+              (reduce-kv (fn [_m short-name onto-spec] 
+                           (let [jena-maps (-> (load-jena onto-spec)
+                                               (sparql/query '((?/x ?/y ?/z))))]
+                             (reset! diag-jena jena-maps)
+                             (store-onto! conn jena-maps short-name)))
+                         nil
+                         load-ontos)
+              conn),
           (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
           (d/database-exists? db-cfg)
           (do 
@@ -478,3 +503,6 @@
   [resource-id conn-atom]
   (when-let [db-id (d/q `[:find ?e . :where [?e :resource/id ~resource-id]] @conn-atom)]
     (resolve-db-id {:db/id db-id} conn-atom)))
+
+  
+  
