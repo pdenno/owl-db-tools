@@ -174,6 +174,9 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
 
 ## To Do
 
+* Ontologies imported by `owl:imports` are not automatically loaded. If you want them, 
+  you must reference them in the call to `create-db`. 
+
 * There is not yet a distributed jar file (e.g. on clojars). 
 
 * Some simplification of the database to a more usable logical structure might be in order. 

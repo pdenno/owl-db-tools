@@ -3,6 +3,7 @@
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
+   [datahike.pull-api     :as dp]
    [pdenno.owl-db-tools.core :as owl]))
 
 ;;; ToDo:
