@@ -3,6 +3,7 @@
   (:require
    [cheshire.core]
    [clojure.set              :as set]
+   [clojure.string           :as str]
    [datahike.api             :as d]
    [datahike.pull-api        :as dp]
    [edu.ucdenver.ccp.kr.kb   :as kb]
@@ -12,16 +13,16 @@
    [taoensso.timbre    :as log])
   (:import java.io.ByteArrayInputStream))
 
-;;; I use 'dvecs' to mean the JENA data stored as a vector of vectors,
-;;; I use 'dmaps' to mean the same data in maps. 
+;;; I use 'dvecs' to mean the JENA data stored as a vector of 3-element vectors.
+;;; I use 'dmaps' to mean the dvecs data reorganized to a vector of maps each
+;;; having a :resource/id and all the attributes about the resource.
 
 ;;; ToDo:
-;;;   - I don't think there is any reason to have :temp/ resources. I've only eliminated :rdf/List so far.
 ;;;   - If 'learned-schema' is a throwaway, can I put somewhere else?
 ;;;   - Define a logger appender (if decided to keep the logger).
 
-(defonce conn nil) ; "The connection to the database"
-(def diag (atom nil))
+(def debugging? true)
+(def diag "For debugging" (atom nil))
 
 (def default-prefixes
    {"daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
@@ -45,10 +46,6 @@
     :owl/imports :owl/inverseOf :owl/minCardinality :owl/onProperty :owl/versionInfo
     :rdf/first :rdf/rest :rdf/type :rdfs/label :rdfs/subPropertyOf})
 
-;;; POD Temporary
-(def temporary-to-be-learned-property?
-  #{:edns/defined-by :edns/defines :edns/specialized-by :edns/specializes :mod/clojureCodeNote})
-
 (def not-stored-property?
   "These aren't stored; they are used to create a vector."
   #{:rdf/first :rdf/rest})
@@ -58,11 +55,11 @@
 ;;; The types of things are defined in https://www.w3.org/TR/2012/REC-owl2-quick-reference-20121211/
 (def owl-schema
   [#:db{:ident :resource/id  :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
-   #:db{:ident :resource/ref :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   
+
    ;; multi-valued properties
    #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/disjointWith       :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/equivalentProperty :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/hasKey             :cardinality :db.cardinality/many :valueType :db.type/ref}
@@ -78,9 +75,8 @@
 
    ;; single-valued properties
    #:db{:ident :owl/backwardCompatibleWith :cardinality :db.cardinality/one :valueType :db.type/string}
-   #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number} ; was long
+   #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/ref}
-   #:db{:ident :owl/disjointWith           :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/equivalentClass        :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/hasValue               :cardinality :db.cardinality/one :valueType :db.type/boolean}
    #:db{:ident :owl/imports                :cardinality :db.cardinality/one :valueType :db.type/ref}
@@ -92,7 +88,7 @@
    #:db{:ident :owl/string-val     :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :owl/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/number-val     :cardinality :db.cardinality/one :valueType :db.type/number}
-   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])   
+   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])
 
 (def rdfs-schema
   [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/ref}
@@ -105,30 +101,25 @@
    #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/ref}])
 
 (def rdf-schema
-  [#:db{:ident :rdf/type :cardinality :db.cardinality/one :valueType :db.type/ref}])
+  [#:db{:ident :rdf/type      :cardinality :db.cardinality/one :valueType :db.type/keyword}   ; e.g. :owl/Class, :owl/Restriction...
+   #:db{:ident :rdf/parseType :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; e.g. :collection
 
-(def full-schema (atom (into (into rdf-schema rdfs-schema) owl-schema)))
+(def full-schema "The currently schema, consisting of the above and what is learned while loading." (atom nil))
+(defn reset-full-schema [] (reset! full-schema (into (into rdf-schema rdfs-schema) owl-schema)))
+(reset-full-schema) ; Run this now, since it is needed, in code right below this line!
+
+(def real-keyword? ; ToDo shouldn't this reflect learning?
+  "Other keywords are assumed to be resources"
+  (->>
+   @full-schema
+   (filter #(and (= (:db/valueType %) :db.type/keyword)
+                 (not= (:db/ident %) :resource/id)))
+   (map :db/ident)
+   set))
 
 (def boxed-property? "These can take multiple values of various types, some need to be boxed." #{:owl/oneOf})
 
 (def loaded-ok? "When false it is usually because of a timeout slurping a URL." (atom true))
-
-(defn load-local
-  "Load an ontology stored in a file in resources."
-  [src]
-  (-> src :access slurp .getBytes ByteArrayInputStream.))
-
-(defn load-remote
-  "Experience suggests ontologydesignpatterns.org cannot be relied upon.
-   Return nil if you can't load from the :access URL, otherwise return the stream."
-  [src & {:keys [timeout] :or {timeout 10000}}]
-  (let [p (promise)]
-    (future (deliver p (-> src :uri slurp .getBytes ByteArrayInputStream.)))
-    (if-let [result (deref p timeout nil)]
-      result
-      (do
-        (reset! loaded-ok? false)
-        (log/error "Timeout: Failed to access" (:uri src))))))
 
 (def long2short "This is used to replace long URI in resources with prefixes." (atom nil))
 (def names-an-onto? (atom nil))
@@ -150,15 +141,64 @@
        (map #(let [cnt (count %)] (if (= \# (nth % (dec cnt))) (subs % 0 (dec cnt)) %)))
        set
        (reset! names-an-onto?)))
+
+(defn reset-for-fresh-db!
+  "Reset various pesky atoms to allow rebuilding the DB."
+  []
+  (reset-full-schema)
+  (reset! long2short nil)
+  (reset! names-an-onto? nil))
+
+(defn valid-for-transact?
+  [data]
+  (cond (nil? data) (throw (ex-info "nil is not valid for DH transact." {:nil data})),
+        (and (map? data) (empty? data)) (throw (ex-info "{} is not valid for DH transact." {:empty data})),
+        (map? data) (reduce-kv (fn [m k v] (assoc m k (valid-for-transact? v))) {} data)
+        (vector? data) (mapv valid-for-transact? data)
+        (keyword? data) data,
+        (string? data) data,
+        (number? data) data,
+        :else (throw (ex-info "unknown datatype" {:unknown data}))))
+
+(defn transact?
+  "Optionally check that the data is valid before sending it.
+   Does not compare against the schema. Currenlty only checks for nils."
+  [conn data & {:keys [check-data?] :or {check-data? debugging?}}]
+  (try (when check-data? (valid-for-transact? data))
+       (d/transact conn data)
+       (catch Exception e (throw (ex-info "Invalid data for d/transact" {:data data :e (.getMessage e)})))))
                       
+(defn load-inline
+  "When (:access src) is the keyword :inline, then src will also include :inline-data"
+  [src]
+  (-> src :inline-data .getBytes ByteArrayInputStream.))
+
+(defn load-local
+  "Load an ontology stored in a file in resources."
+  [src]
+  (-> src :access slurp .getBytes ByteArrayInputStream.))
+
+(defn load-remote
+  "Experience suggests some sites (e.g. ontologydesignpatterns.org) cannot be relied upon.
+   Return nil if you can't load from the :access URL, otherwise return the stream."
+  [src & {:keys [timeout] :or {timeout 10000}}]
+  (let [p (promise)]
+    (future (deliver p (-> src :uri slurp .getBytes ByteArrayInputStream.)))
+    (if-let [result (deref p timeout nil)]
+      result
+      (do
+        (reset! loaded-ok? false)
+        (log/error "Timeout: Failed to access" (:uri src))))))
+
 (defn load-jena
   "Using JENA, return an rdf/KB object with the argument ontologies loaded."
   [{:keys [uri access format] :as src}]
-  (log/info "(Re)loading ontologies.")
   (let [kb (kb/kb :jena-mem)]
     (when @loaded-ok?
       (log/info "Loading" uri))
-    (when-let [stream (if access (load-local src) (load-remote src))]
+    (when-let [stream (cond (string? access)  (load-local src),
+                            (= access :inline) (load-inline src),
+                            :else (load-remote src))]
       (rdf/load-rdf kb stream (or format :rdfxml)))
     ;; If you do the sync, some resources won't print namespace-qualified in sparql queries.
     ;; It will be correct in the JENA DB, just not printed. More on this (possibly related!):
@@ -167,29 +207,38 @@
     #_(rdf/synch-ns-mappings kb)
     kb))
 
+(defn onto-keyword
+  "Return the keyword representing an ontology or schema (e.g. RDF)."
+  [sym]
+  (let [[success base nam] (re-matches #"^(http://[^#]*)#?(.*)$" (str sym))]
+    (when (and success (empty? nam) #_(@names-an-onto? base))
+      (keyword "$source" (str/replace base "/" "%")))))
+
 (defn keywordize-triple
   "From Jena, all the resources come back as symbols in either namespace '_' or 'http:'.
    These are to be rendered as keywords in the namespace 'temp' for _, and the short prefix for the full URL otherwise.
    The function returns a vector of the converted [x y z] triple."
-  [{:?/syms [x y z] :as data} & {:keys [l2s] :or {l2s @long2short}}]
-  (letfn [(convert [v & {:keys [ref?]}]
+  [{:?/syms [x y z]} & {:keys [l2s] :or {l2s @long2short}}]
+  (letfn [(convert [v & {:keys [ref?]}] ; ToDo: Performance hit for letfn?
             (if (symbol? v)
               (cond
-                (= (namespace v) "_") (keyword "temp" (str "t" (name v))), ; name can't begin with a number.
+                (= (namespace v) "_") (keyword "temp" (str "t" (name v))), ; Don't let name begin with a number.
                 (= (namespace v) "http:")
                 (let [[success base nam] (re-matches #"^(http://[^#]*)#?(.*)$" (str v))]
-                  (cond (and success (not-empty nam))
-                        (if-let [prefix (get l2s base)]
-                          (if ref? {:resource/ref (keyword prefix nam)} (keyword prefix nam))
-                          (if ref? {:resource/ref (keyword base nam)}   (keyword base nam))),
-                        (and (empty? nam) (@names-an-onto? base)) ; not found
-                        (keyword "$onto" base), 
-                        :else ; ToDo: is this one even possible?
-                        (do (log/warn "(2) Don't know what to do with" (str v))
-                            (reset! diag data)
-                            (keyword "BUG" (str v))))))
+                  (if (and success (not-empty nam))
+                    (if-let [prefix (get l2s base)]
+                      (let [res (keyword prefix nam)]
+                        (if (and ref? (not= res :rdf/nil)) {:resource/temp-ref res} res))
+                      (keyword base nam)),
+                    (if-let [onto-kw (onto-keyword v)]
+                      (if ref? {:resource/temp-ref (onto-keyword v)} onto-kw)
+                      (do (log/warn "(2) Don't know what to do with" (str v))
+                          (keyword "BUG" (str v)))))))
               v))]
-    (vector (convert x) (convert y) (convert z :ref? true))))
+    (let [cx (convert x)
+          cy (convert y)
+          cz (if (real-keyword? cy) (convert z) (convert z :ref? true))]
+      (vector cx cy cz))))
 
 ;;;---- Operating on the keywordized dvecs -----------------------------------------------
 (defn temp-id? [k]
@@ -227,37 +276,11 @@
                                                          (= (nth % 1) :rdf/rest))
                                                 %)
                                              list-stuff)]
-                         (cond (= {:resource/ref :rdf/nil} (nth rest-trip 2)) (conj lis val),
+                         (cond (= :rdf/nil (nth rest-trip 2)) (conj lis val),
                                (> cnt 100) (throw (ex-info "Didn't find RDF list termination:" {:starter-triple starter-trip})),
                                :else (recur (conj lis val) (nth rest-trip 2) (inc cnt)))))))
             {}
             starters)))
-
-;;; From nb-agent
-(defn learn-schema-from-data
-  "Return an schema update with what is learned from the AST or examples."
-  ([data] (learn-schema-from-data {} data))
-  ([schema-map data]
-   (cond (vector? data) (reduce (fn [sm v] (learn-schema-from-data sm v)) schema-map data)
-         (map?    data) (reduce-kv (fn [sm k v]
-                                     (cond (coll? v)
-                                           (learn-schema-from-data
-                                            (-> sm
-                                                (assoc-in [k :db/cardinality] :db.cardinality/many)
-                                                ;(assoc-in [k :db/unique]      :db.unique/identity) ; POD guessing.
-                                                (assoc-in [k :db/valueType]   :db.type/ref))
-                                            v)
-                                           (contains? sm k) sm
-                                           :else (cond-> sm
-                                                   true          (assoc-in [k :db/cardinality] :db.cardinality/one)
-                                                   (string?  v)  (assoc-in [k :db/valueType]   :db.type/string)
-                                                   (float?   v)  (assoc-in [k :db/valueType]   :db.type/number)
-                                                   (integer? v)  (assoc-in [k :db/valueType]   :db.type/number)
-                                                   (keyword? v)  (assoc-in [k :db/valueType]   :db.type/keyword)
-                                                   (boolean? v)  (assoc-in [k :db/valueType]   :db.type/boolean))))
-                                   schema-map
-                                   data)
-         :else schema-map)))
 
 (defn learn-type
   "Return the :db/valueType for the data."
@@ -266,11 +289,14 @@
         data          (map #(nth % 2) prop-examples)
         types         (->> data (map type) distinct)
         typ           (first types)]
-    (if (== 1 (count types)) ; case doesn't work here. 
+    (if (== 1 (count types))
       (cond (= typ clojure.lang.Keyword) :db.type/keyword, 
-            (= typ java.lang.String)     :db.type/string
-            (= typ java.lang.Long)       :db.type/number
-            (= typ java.lang.Boolean)    :db.type/boolean)
+            (= typ java.lang.String)     :db.type/string,
+            (= typ java.lang.Long)       :db.type/number,
+            (= typ java.lang.Boolean)    :db.type/boolean,
+            (and (= typ clojure.lang.PersistentArrayMap)
+                 (every? #(contains? % :resource/temp-ref) data)) :db.type/ref,
+            :else (throw (ex-info "Cannot learn type for" {:data data})))
       (log/error "Found multiple types while learning" prop types))))
 
 (defn learn-cardinality
@@ -300,9 +326,8 @@
           (swap! learned #(conj % spec))
           (swap! full-schema #(conj % spec)))))
       (binding [log/*config* (assoc log/*config* :min-level :info)]
-        (d/transact conn @learned))))
+        (transact? conn @learned))))
                 
-;;;--------------------------------- create and operate on the dmaps -----------------------
 (defn learned-multi?
   "Return true if the property is learned and :db/cardinality :db.cardinality/many"
   [prop learned-schema]
@@ -327,7 +352,8 @@
     (if (coll? v)
       (mapv b-val v)
       (b-val v))))
-  
+
+;;;--------------------------------- create and operate on the dmaps -----------------------
 (defn triples2maps
   "Read all the triples and return a map of them where each entry is an RDF resource represented
    as a map where each key is an attribute of the resource."
@@ -405,33 +431,50 @@
     (future (deliver p (slurp url)))
     (if (string? (deref p timeout false)) true false)))
 
-(def diag-jena (atom nil))
+(defn lookup-resource
+  "Return the :db/id of the resource given the its ns-qualified keyword identifier."
+  [id conn]
+  (or (d/q  `[:find ?e . :where [?e :resource/id ~id]] @conn)
+      (do (log/info "Making resource on-the-fly:" id)
+          (transact? conn [{:resource/id id}])
+          (lookup-resource id conn))))
+
+(defn resolve-temp-refs
+  "resolve-temps created references to resources.
+   stubs for all resource/ids were transacted to the DB. 
+   This recursively replaces :resource/temp-ref in the main dmap with their :db/id."
+  [obj conn]
+  (cond (map? obj) (if (contains? obj :resource/temp-ref) ; then the map has only this key; replace it.
+                     (lookup-resource (:resource/temp-ref obj) conn)
+                     (reduce-kv (fn [m k v] (assoc m k (resolve-temp-refs v conn))) {} obj)), 
+        (vector? obj) (mapv #(resolve-temp-refs % conn) obj)
+        :else obj))
 
 (defn store-onto!
   "Transform RDF triples in argument jena-maps, resolve rdf/List, create maps of resources. 
    Then store it." 
   [conn jena-maps]
   (let [dvecs (mapv #(keywordize-triple % :long2short long2short) jena-maps)]
-    (reset! diag dvecs)
-    ;(learn-schema! dvecs conn) ; <=================================================================================== Start here
+    (learn-schema! dvecs conn)
     (let [rdf-lists (resolve-rdf-lists dvecs)
           dmaps (->> (triples2maps dvecs rdf-lists @full-schema)
                      (reduce-kv (fn [res k v] (conj res (assoc v :resource/id k))) [])
                      resolve-temps)
           resources (reduce-kv (fn [res _ v] (if-let [id (:resource/id v)] (conj res id) res)) #{} dmaps)]
-      (reset! diag {:dmaps dmaps :resources resources})
       (binding [log/*config* (assoc log/*config* :min-level :info)]
-        ;; BUG HERE: :dol/physical-quality is in resources, which are transacted here, but it doesn't
-        ;; help the Nothing found for entity id  :dol/physical-quality.
-        ;; It looks like commenting out the :db/unique :db.unique/identity doesn't help.
-        (d/transact conn (mapv (fn [x] {:resource/id x}) resources))
-        (d/transact conn dmaps #_(-> dmaps vals vec))))))
+        (transact? conn (mapv (fn [x] {:resource/id x}) resources)) ; transact resource stubs.
+        (transact? conn (resolve-temp-refs dmaps conn))))))
+
+(defn onto-entities
+  [ontos]
+  (reduce-kv (fn [r _k v] (conj r {:resource/id (-> v :uri onto-keyword)})) [] ontos))
 
 (defn create-db!
   "If rebuild? is true, read OWL with JENA and write it into a Datahike DB. 
    Otherwise, just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
   [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
+  (reset-for-fresh-db!)
   (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)
         all-ontos  (merge default-prefixes ontos)
         load-ontos (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} all-ontos)]
@@ -440,43 +483,35 @@
           (binding [log/*config* (assoc log/*config* :min-level :info)]
             (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
             (d/create-database db-cfg)
-            (log/info "Created schema DB")
-            (alter-var-root (var conn) (fn [_] (d/connect db-cfg)))
-            (d/transact conn @full-schema)
-            (doseq [onto-spec (vals load-ontos)]
-              (let [jena-maps (-> (load-jena onto-spec) (sparql/query '((?/x ?/y ?/z))))]
-                (reset! diag-jena jena-maps)
-                (store-onto! conn jena-maps)))
-            conn),
+            (let [conn (d/connect db-cfg)]
+              (log/info "Created schema DB")
+              (transact? conn @full-schema)
+              (transact? conn (onto-entities all-ontos))
+              (doseq [onto-spec (vals load-ontos)]
+                (let [jena-maps (-> (load-jena onto-spec) (sparql/query '((?/x ?/y ?/z))))]
+                  (store-onto! conn jena-maps)))
+              conn)),
           (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
-          (d/database-exists? db-cfg) (do (alter-var-root (var conn) (fn [_] (d/connect db-cfg))) conn),
+          (d/database-exists? db-cfg) (d/connect db-cfg)
           :else (log/warn "There is no DB to connect to."))))
 
-(defn db-ref?
-  "Return true if to object is a :db/id
-   (It looks to me that a datahike ref is a map with exactly one key: :db/id.)"
-  [obj]
-  (and (map? obj) (= '(:db/id) (keys obj))))
-
-(defn resolve-db-id
-  "Return the form resolved, possibly removing some properties."
-  ([form conn-atom] (resolve-db-id form conn-atom #{}))
-  ([form conn-atom filter-set]
-   (letfn [(resolve-aux [obj]
-             (cond
-               (db-ref? obj) (let [res (dp/pull @conn-atom '[*] (:db/id obj))]
-                               (if (= res obj) nil (resolve-aux res)))
-               (map? obj) (reduce-kv (fn [m k v] (if (filter-set k) m (assoc m k (resolve-aux v))))
-                                     {}
-                                     obj)
-               (vector? obj)      (mapv resolve-aux obj)
-               (set? obj)    (set (mapv resolve-aux obj))
-               (coll? obj)        (mapv resolve-aux obj) ; I wonder why these would exist!
-               :else  obj))]
-     (resolve-aux form))))
-
+;;;------------------------ User convenience functions --------------------------------- 
 (defn pull-resource
   "Return the map of a resource."
-  [resource-id conn-atom]
-  (when-let [db-id (d/q `[:find ?e . :where [?e :resource/id ~resource-id]] @conn-atom)]
-    (resolve-db-id {:db/id db-id} conn-atom)))
+  [resource-id conn & {:keys [keep-db-ids?]}]
+  (when-let [db-id (d/q `[:find ?e . :where [?e :resource/id ~resource-id]] conn)]
+    (let [obj (dp/pull conn '[*] db-id)]
+      (letfn [(subobj [x]
+                (cond (and (map? x) (contains? x :resource/id)) (:resource/id x),         ; It is a whole resource, return ref. 
+                      (and (map? x) (contains? x :db/id) (== (count x) 1))                ; It is an object ref...
+                      (or (d/q `[:find ?id . :where [~(:db/id x) :resource/id ?id]] conn) ; ...return keyword if it is a resource...
+                          (subobj (dp/pull conn '[*] (:db/id x)))),                       ; ...otherwise it is some other structure.
+                      (map? x) (reduce-kv (fn [m k v] (assoc m k (subobj v))) {} x),
+                      (vector? x) (mapv subobj x),
+                      :else x))
+              (rem-db-ids [x]
+                (cond (map? x) (->> (dissoc x :db/id) (reduce-kv (fn [m k v] (assoc m k (rem-db-ids v))) {})),
+                      (vector? x) (mapv rem-db-ids x)
+                      :else x))]
+        (cond-> (reduce-kv (fn [m k v] (assoc m k (subobj v))) {} obj)
+          (not keep-db-ids?) rem-db-ids)))))

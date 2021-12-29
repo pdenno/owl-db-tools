@@ -13,3 +13,5 @@ pom.xml.asc
 .cpcache
 data/DLP-CommonSenseMapping.ttl
 data/DOLCE-Lite.ttl
+.clj-kondo/.cache/
+

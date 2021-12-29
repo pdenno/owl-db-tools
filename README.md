@@ -106,15 +106,24 @@ However, the library also provides `pull-resource` which takes as arguments a re
 It returns a map of all the triples associated with the resource-id
 
 ```clojure
-(owl/pull-resource :dol/state conn)
+(owl/pull-resource :dol/perdurant conn)
 
 ; Returns
-{:db/id 717,
+{:owl/disjointWith [:dol/endurant],
  :rdf/type :owl/Class,
- :rdfs/comment  ["Within stative occurrences, we distinguish between  states and ..."],
- :rdfs/subClassOf [:dol/stative],
- :resource/id :dol/state}
+ :rdfs/comment
+ ["Perdurants (AKA occurrences) comprise what are variously called events, processes, phenomena..."],
+ :rdfs/subClassOf
+ [:dol/spatio-temporal-particular
+  {:owl/onProperty :dol/has-quality, :owl/someValuesFrom [:dol/temporal-location_q], :rdf/type :owl/Restriction}
+  {:owl/onProperty :dol/participant, :owl/someValuesFrom [:dol/endurant], :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/part, :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/temporal-quality], :owl/onProperty :dol/has-quality, :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/specific-constant-constituent, :rdf/type :owl/Restriction}],
+ :resource/id :dol/perdurant}
 ```
+
+You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
 
 ## Database Schema
 
@@ -122,51 +131,51 @@ The database is structured as shown.
 Details about such  schema can be found in the [Datahike schema docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/schema). 
 
 ```clojure
-(def owl-schema
-  [#:db{:ident :resource/id :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
-  
+  [#:db{:ident :resource/id  :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+
    ;; multi-valued properties
-   #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/equivalentProperty :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/hasKey             :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/intersectionOf     :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/members            :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/onProperties       :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/disjointWith       :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/equivalentProperty :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/hasKey             :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/intersectionOf     :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/members            :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/onProperties       :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/oneOf              :cardinality :db.cardinality/many :valueType :db.type/ref}
-   #:db{:ident :owl/propertyChainAxiom :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/sameAs             :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/someValuesFrom     :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :owl/withRestrictions   :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :owl/propertyChainAxiom :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/sameAs             :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/someValuesFrom     :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/withRestrictions   :cardinality :db.cardinality/many :valueType :db.type/ref}
 
    ;; single-valued properties
    #:db{:ident :owl/backwardCompatibleWith :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number}
-   #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   #:db{:ident :owl/disjointWith           :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   #:db{:ident :owl/equivalentClass        :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/ref}
+   #:db{:ident :owl/equivalentClass        :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/hasValue               :cardinality :db.cardinality/one :valueType :db.type/boolean}
-   #:db{:ident :owl/imports                :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/imports                :cardinality :db.cardinality/one :valueType :db.type/ref}
+   #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number}
-   #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/keyword}
+   #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}
 
    #:db{:ident :owl/string-val     :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :owl/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/keyword}
    #:db{:ident :owl/number-val     :cardinality :db.cardinality/one :valueType :db.type/number}
-   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])   
+   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])
 
 (def rdfs-schema
-  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/keyword}
-   #:db{:ident :rdfs/range         :cardinality :db.cardinality/many :valueType :db.type/keyword}
+  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :rdfs/range         :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/many :valueType :db.type/string}
-   #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/keyword}
+   #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
+   
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
-   #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/keyword}])
+   #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/ref}])
 
 (def rdf-schema
   [#:db{:ident :rdf/type :cardinality :db.cardinality/one :valueType :db.type/keyword}])
@@ -175,7 +184,7 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
 ## To Do
 
 * Ontologies imported by `owl:imports` are not automatically loaded. If you want them, 
-  you must reference them in the call to `create-db`. 
+  you must reference them in the call to `create-db!`. 
 
 * There is not yet a distributed jar file (e.g. on clojars). 
 
