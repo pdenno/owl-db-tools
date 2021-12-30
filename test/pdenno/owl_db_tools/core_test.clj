@@ -1,22 +1,17 @@
 (ns pdenno.owl-db-tools.core-test
   (:require
-   [clojure.string :as str]
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
    [datahike.pull-api     :as dp]
-   [edu.ucdenver.ccp.kr.kb   :as kb]
    [edu.ucdenver.ccp.kr.jena.kb]
-   [edu.ucdenver.ccp.kr.rdf :as rdf]
-   [edu.ucdenver.ccp.kr.sparql :as sparql]
-   [pdenno.owl-db-tools.core :as owl]))
+   [pdenno.owl-db-tools.core :as owl]
+   [pdenno.owl-db-tools.util :as util]))
 
-;;; ToDo:
-;;;   - Determine what happened to DLP "cause" "sem"
-;;;      Answer for "sem": triples exist  [:sem/code-role :edns/defined-by :sem/s-communication-theory]
+(util/config-log :info)
 
 ;;; ---------------- Small test case ----------------------------------
-(def small-cfg {:store {:backend :mem :id "small-test"} :keep-history? false :schema-flexibility :write})
+(def small-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
 
 (def small-conn nil)
 
@@ -55,7 +50,7 @@
 ;;;     <edns:theory rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl#s-communication-theory"/>
 ;;;   </owl:oneOf>
 
-(def info-cfg {:store {:backend :mem :id "info-test"} :keep-history? false :schema-flexibility :write})
+(def info-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
 
 (def info-sources
   {"info"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"}})
@@ -63,34 +58,51 @@
 (def info-conn nil)
 
 (defn run-info-conn []
-  (when (d/database-exists? small-cfg) (d/delete-database info-cfg))
+  (when (d/database-exists? info-cfg) (d/delete-database info-cfg))
   (alter-var-root (var info-conn)
                   (fn [_]
                     (owl/create-db! info-cfg
                                     info-sources
                                     :rebuild? true))))
 
-;;; ---------------- Comprehensive  test case ----------------------------------
-(def onto-sources
-  {"cause" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl"  :ref-only? true},
-   "coll"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"},
-   "colv"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl"},
-   "cs"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/CommonSenseMapping.owl"},
-   "dlp"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DLP_397.owl"},
-   "dol"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
-   "edns"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
-   "fpar"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
-   "info"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
-   "modal" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
-   "plan"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
-   "sem"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
-   "space" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
-   "soc"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
-   "sys"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl"},
-   "time"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"},
-   
-   "mod"   {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
-   "ops"   {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}})
+;;; ---------------- Modal test case ----------------------------------
+(def modal-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
+
+(def modal-sources
+  {"edns"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
+   "modal" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"}})
+
+(def modal-conn nil)
+
+(defn run-modal-conn []
+  (when (d/database-exists? modal-cfg) (d/delete-database modal-cfg))
+  (alter-var-root (var modal-conn)
+                  (fn [_]
+                    (owl/create-db! modal-cfg
+                                    modal-sources
+                                    :rebuild? true))))
+
+;;; ---------------- Comprehensive test case ----------------------------------
+(def big-sources
+  {"cause"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl"  :ref-only? true},
+   "coll"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"},
+   "colv"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl"},
+   "common" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/CommonSenseMapping.owl"},
+   "dlp"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DLP_397.owl"},
+   "dol"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
+   "edns"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
+   "fpar"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
+   "info"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
+   "mod"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
+   "pla"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
+   "sem"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
+   "space"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
+   "soc"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
+   "sys"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl"},
+   "time"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"},
+
+   "model"  {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
+   "ops"    {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}})
 
 (def big-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"}
               :keep-history? false
@@ -104,23 +116,36 @@
                   (fn [_]
                     (owl/create-db!
                      big-cfg
-                     onto-sources
+                     big-sources
                      :rebuild? true
                      :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))))
 
 (deftest big-onto-okay
-  (testing "Read a substantial amount of owl."
+  (testing "Read a substantial amount of owl; make a tiny check ;^)"
     (is (do (run-big-conn) (d/database-exists? big-cfg)))
     (is (= [:dol/stative]
            (-> (owl/pull-resource :dol/state @big-conn) :rdfs/subClassOf)))))
 
+(deftest check-resolve-rdf-lists []
+  (testing "that lists resolve correctly"
+    (is (= #:temp{:t-301f5ece:17e06c5afb2:-77f6 [#:resource{:temp-ref :sem/s-communication-theory}]}
+           (owl/resolve-rdf-lists
+            [[:temp/t-301f5ece:17e06c5afb2:-77f7 :owl/oneOf :temp/t-301f5ece:17e06c5afb2:-77f6]
+             [:temp/t-301f5ece:17e06c5afb2:-77f6 :rdf/rest :rdf/nil]
+             [:temp/t-301f5ece:17e06c5afb2:-77f6 :rdf/first #:resource{:temp-ref :sem/s-communication-theory}]])))))
+
+;;; Memory cleanup. I keep the file-based one around.
+(doseq [db [small-cfg info-cfg modal-cfg]]
+  (when (d/database-exists? db)
+    (d/delete-database db)))
+
 ;;;---------------------- Random investigations --------------------------------------
 (defn verify-ref-idea
   "This probably follows directly from design of DH, but...
-    (1) Verify that it is possible to avoid use of :resource/ref by resolving references. 
+    (1) Verify that it is possible to avoid use of :resource/ref by resolving references.
     (2) Verify that the reference is made using just the integer, not {:db/id the-integer}."
   []
-  (let [cfg  {:store {:backend :mem :id "exp1"} :keep-history? false :schema-flexibility :write}]
+  (let [cfg  {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write}]
     (when (d/database-exists? cfg) (d/delete-database cfg))
     (d/create-database cfg)
     (d/transact (d/connect cfg)
@@ -131,29 +156,3 @@
       (d/transact (d/connect cfg) [{:class-b/ref eid}])
       #_(d/q '[:find ?e ?a ?v :where [?e ?a ?v]] @(d/connect cfg))
       (dp/pull-many @(d/connect cfg) '[*] [1 2 3 4]))))
-
-(def diag (atom nil))
-
-;;; This one investigates the following bit of xml; instances!
-(defn tryme []
-  (as-> (owl/load-jena {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"
-                        :access "data/s-comm-theory.xml"}) ?x
-    (reset! diag ?x)
-    (sparql/query ?x '((?/x ?/y ?/z)))
-    #_(mapv #(owl/keywordize-triple % :long2short long2short) ?x)))
-
-(deftest check-resolve-rdf-lists []
-  (testing "that lists resolve correctly"
-    (is (= #:temp{:t-301f5ece:17e06c5afb2:-77f6 [#:resource{:temp-ref :sem/s-communication-theory}]}
-           (owl/resolve-rdf-lists
-            [[:temp/t-301f5ece:17e06c5afb2:-77f7 :owl/oneOf :temp/t-301f5ece:17e06c5afb2:-77f6]
-             [:temp/t-301f5ece:17e06c5afb2:-77f6 :rdf/rest :rdf/nil]                           
-             [:temp/t-301f5ece:17e06c5afb2:-77f6 :rdf/first #:resource{:temp-ref :sem/s-communication-theory}]])))))
-
-(defn resolve-fully [obj]
-  (cond (map? obj) (reduce-kv (fn [m k v] (assoc m k (resolve-fully v))) {} obj)
-        (vector? obj) (mapv resolve-fully obj)
-        (keyword? obj) (if (= (namespace obj) "temp") (get @owl/diag-maps obj) obj)
-        :else obj))
-                         
- ;;;(resolve-fully (owl/resolve-rdf-lists @owl/diag-triples))

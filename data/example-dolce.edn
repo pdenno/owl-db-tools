@@ -14,6 +14,7 @@
  ["The DOLCE and DnS ontologies. OWL engineering by Aldo Gangemi."],
  :resource/id
  :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl,
+ :source/loaded? true,
  :source/long-name
  "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl",
  :source/short-name "dol"}
@@ -44,7 +45,7 @@
 
 
  :dol/abstract
-{:owl/disjointWith [:dol/perdurant],
+{:owl/disjointWith [:dol/endurant :dol/quality :dol/perdurant],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["The main characteristic of abstract entities is that  they do not have spatial nor temporal qualities, and they are not qualities themselves.  The only class of abstract entities we consider in the present version of the upper  ontology is that of quality regions (or simply regions). Quality spaces are special  kinds of quality regions, being mereological sums of all the regions related to a certain quality type. The other examples of abstract entities (sets and facts) are only  indicative."],
@@ -83,7 +84,7 @@
 
 
  :dol/abstract-quality
-{:owl/disjointWith [:dol/physical-quality],
+{:owl/disjointWith [:dol/temporal-quality :dol/physical-quality],
  :rdf/type :owl/Class,
  :rdfs/comment ["A quality inherent in a non-physical endurant."],
  :rdfs/subClassOf
@@ -101,7 +102,7 @@
 
 
  :dol/abstract-region
-{:owl/disjointWith [:dol/temporal-region],
+{:owl/disjointWith [:dol/temporal-region :dol/physical-region],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["A region at which only abstract qualities can be directly located. It assumes some metrics for abstract (neither physical nor temporal) properties."],
@@ -133,7 +134,7 @@
 
 
  :dol/amount-of-matter
-{:owl/disjointWith [:dol/feature],
+{:owl/disjointWith [:dol/physical-object :dol/feature],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["The common trait of amounts of matter is that they are endurants with no unity (according to Gangemi et a. 2001 none of them is an essential  whole). Amounts of matter - 'stuffs' referred to by mass nouns like 'gold', 'iron', 'wood',  'sand', 'meat', etc. - are mereologically  invariant, in the sense that they change their  identity when they change some parts."],
@@ -142,7 +143,7 @@
 
 
  :dol/arbitrary-sum
-{:owl/disjointWith [:dol/physical-endurant],
+{:owl/disjointWith [:dol/non-physical-endurant :dol/physical-endurant],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["AKA arbitrary-collection.The mereological sum of any two or more endurants (physical or not). Arbitrary sums have no unity criterion (they are 'extensional')."],
@@ -222,7 +223,7 @@
 
 
  :dol/endurant
-{:owl/disjointWith [:dol/quality],
+{:owl/disjointWith [:dol/abstract :dol/quality :dol/perdurant],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["The main characteristic of endurants is that all of them are independent essential wholes. This does not mean that the corresponding property (being an endurant) carries proper unity, since there is  no common unity criterion for endurants. Endurants can 'genuinely' change in time,  in the sense that the very same endurant as a whole can have incompatible properties at different times. To see this, suppose that an endurant - say 'this paper' - has a  property at a time t 'it's white', and a different, incompatible property at time t'  'it's yellow': in both cases we refer to the whole object, without picking up any  particular part of it. Within endurants, we distinguish between physical and non-physical  endurants, according to whether they have direct spatial qualities. Within physical  endurants, we distinguish between amounts of matter, objects, and features."],
@@ -269,7 +270,7 @@
 
 
  :dol/feature
-{:owl/disjointWith [:dol/physical-object],
+{:owl/disjointWith [:dol/physical-object :dol/amount-of-matter],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["Features are 'parasitic entities', that exist insofar their host exists. Typical examples of features are holes, bumps, boundaries, or spots of color. Features may be relevant parts of their host, like a bump or an edge, or dependent regions like a hole in a piece of cheese, the underneath of a table, the front of a house, or the shadow of a tree, which are not parts of their host. All features are essential wholes, but no common unity criterion may exist for all of them. However, typical features have a topological unity, as they are singular entities.Here only features of physical endurants are considered."],
@@ -493,7 +494,7 @@
 
 
  :dol/non-physical-endurant
-{:owl/disjointWith [:dol/arbitrary-sum],
+{:owl/disjointWith [:dol/arbitrary-sum :dol/physical-endurant],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["An endurant with no mass, generically constantly depending on some agent. Non-physical endurants can have physical constituents (e.g. in the case of members of a collection)."],
@@ -592,51 +593,51 @@
 
 
  :dol/perdurant
-{:owl/disjointWith [:dol/endurant],
+{:owl/disjointWith [:dol/endurant :dol/abstract :dol/quality],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["Perdurants (AKA occurrences) comprise what are variously called events, processes, phenomena, activities and states. They can have temporal parts or spatial parts. For instance, the first movement of (an execution of) a symphony is a temporal part of the symphony. On the other hand, the play performed by the left side of the orchestra is a spatial part. In both cases, these parts are occurrences themselves. We assume that objects cannot be parts of occurrences, but rather they participate in them. Perdurants extend in time by accumulating different temporal parts, so that, at any time they are present, they are only partially present, in  the sense that some of their proper temporal parts (e.g., their previous or future phases) may be not present. E.g., the piece of paper you are reading now is wholly present, while some temporal parts of your reading are not present yet, or any more. Philosophers say that endurants are entities that are in time, while lacking temporal parts (so to speak, all their parts flow with them in time). Perdurants, on the contrary, are entities that happen in time, and can have temporal parts (all their parts are fixed in time)."],
  :rdfs/subClassOf
  [:dol/spatio-temporal-particular
   {:owl/allValuesFrom [:dol/perdurant],
+   :owl/onProperty :dol/specific-constant-constituent,
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/perdurant],
    :owl/onProperty :dol/part,
+   :rdf/type :owl/Restriction}
+  {:owl/onProperty :dol/participant,
+   :owl/someValuesFrom [:dol/endurant],
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/temporal-quality],
    :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/temporal-location_q],
-   :rdf/type :owl/Restriction}
-  {:owl/onProperty :dol/participant,
-   :owl/someValuesFrom [:dol/endurant],
-   :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/perdurant],
-   :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}],
  :resource/id :dol/perdurant}
 
 
  :dol/physical-endurant
-{:owl/disjointWith [:dol/non-physical-endurant],
+{:owl/disjointWith [:dol/non-physical-endurant :dol/arbitrary-sum],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["An endurant having a direct physical (at least spatial) quality."],
  :rdfs/subClassOf
  [:dol/endurant
-  {:owl/allValuesFrom [:dol/physical-quality],
-   :owl/onProperty :dol/has-quality,
-   :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/physical-endurant],
-   :owl/onProperty :dol/specific-constant-constituent,
-   :rdf/type :owl/Restriction}
-  {:owl/onProperty :dol/has-quality,
-   :owl/someValuesFrom [:dol/spatial-location_q],
-   :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/physical-quality],
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/physical-quality],
+   :owl/onProperty :dol/has-quality,
+   :rdf/type :owl/Restriction}
+  {:owl/onProperty :dol/has-quality,
+   :owl/someValuesFrom [:dol/spatial-location_q],
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/physical-endurant],
+   :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}],
  :resource/id :dol/physical-endurant}
 
@@ -662,7 +663,7 @@
 
 
  :dol/physical-object
-{:owl/disjointWith [:dol/feature],
+{:owl/disjointWith [:dol/amount-of-matter :dol/feature],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["The main characteristic of physical objects is that  they are endurants with unity. However, they have no common unity criterion, since  different subtypes of objects may  have different unity criteria. Differently from  aggregates, (most) physical objects change some of their parts while keeping their  identity, they can have therefore temporary parts. Often physical objects (indeed,  all endurants) are ontologically independent from occurrences (discussed below).  However, if we admit that every object has a life, it is hard to exclude a mutual  specific constant dependence between the two. Nevertheless, we may still use the  notion of dependence to (weakly) characterize objects as being not specifically  constantly dependent on other objects."],
@@ -671,7 +672,7 @@
 
 
  :dol/physical-quality
-{:owl/disjointWith [:dol/abstract-quality],
+{:owl/disjointWith [:dol/abstract-quality :dol/temporal-quality],
  :rdf/type :owl/Class,
  :rdfs/comment ["A quality inherent in a physical endurant."],
  :rdfs/subClassOf
@@ -689,7 +690,7 @@
 
 
  :dol/physical-region
-{:owl/disjointWith [:dol/temporal-region],
+{:owl/disjointWith [:dol/abstract-region :dol/temporal-region],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["A region at which only physical qualities can be  directly located. It assumes some metrics for physical properties."],
@@ -795,7 +796,7 @@
 
 
  :dol/quality
-{:owl/disjointWith [:dol/endurant],
+{:owl/disjointWith [:dol/endurant :dol/abstract :dol/perdurant],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["Qualities can be seen as the basic entities we can  perceive or measure: shapes, colors, sizes, sounds, smells, as well as weights, lengths,  electrical charges... 'Quality' is often used as a synonymous of 'property', but this is  not the case in this upper ontology: qualities are particulars, properties are universals.  Qualities inhere to entities: every entity (including qualities themselves) comes with  certain qualities, which exist as long as the entity exists."],
@@ -1029,7 +1030,7 @@
 
 
  :dol/temporal-quality
-{:owl/disjointWith [:dol/physical-quality],
+{:owl/disjointWith [:dol/abstract-quality :dol/physical-quality],
  :rdf/type :owl/Class,
  :rdfs/comment ["A quality inherent in a perdurant."],
  :rdfs/subClassOf
@@ -1047,7 +1048,7 @@
 
 
  :dol/temporal-region
-{:owl/disjointWith [:dol/abstract-region],
+{:owl/disjointWith [:dol/abstract-region :dol/physical-region],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["A region at which only temporal qualities can be  directly located. It assumes a metrics for time."],
@@ -1208,4 +1209,24 @@
  :rdfs/range [:dol/particular],
  :rdfs/subPropertyOf :dol/immediate-relation-i,
  :resource/id :dol/weak-connection}
+
+
+ :owl/Class
+#:resource{:id :owl/Class}
+
+
+ :owl/ObjectProperty
+#:resource{:id :owl/ObjectProperty}
+
+
+ :owl/Ontology
+#:resource{:id :owl/Ontology}
+
+
+ :owl/Restriction
+#:resource{:id :owl/Restriction}
+
+
+ :owl/SymmetricProperty
+#:resource{:id :owl/SymmetricProperty}
 }

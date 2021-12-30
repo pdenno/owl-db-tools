@@ -5,7 +5,6 @@ into a [Datahike](https://datahike.io/) database.
 
 The library is currently in its early stages of development, though it should be usable with not much effort. 
 
-
 ## Usage
 
 There are three steps to getting started: 
@@ -23,9 +22,6 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
              :keep-history? false
              :schema-flexibility :write})
 ```
-See the  for 
-more information about database backend options.
-
 
 ### Specifying the data to store
 
