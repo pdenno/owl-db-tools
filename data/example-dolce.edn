@@ -1,41 +1,46 @@
 {
 
 
- :$onto/http:%%purl.org%dc%elements%1.1%
-#:resource{:id :$onto/http:%%purl.org%dc%elements%1.1%}
+ :$source/http:%%www.daml.org%2001%03%daml+oil
+{:resource/id :$source/http:%%www.daml.org%2001%03%daml+oil,
+ :source/long-name "http://www.daml.org/2001/03/daml+oil",
+ :source/short-name "daml"}
 
 
- :$onto/http:%%www.daml.org%2001%03%daml+oil
-#:resource{:id :$onto/http:%%www.daml.org%2001%03%daml+oil}
-
-
- :$onto/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl
+ :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl
 {:owl/versionInfo "classified",
  :rdf/type :owl/Ontology,
  :rdfs/comment
  ["The DOLCE and DnS ontologies. OWL engineering by Aldo Gangemi."],
  :resource/id
- :$onto/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl}
+ :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl,
+ :source/long-name
+ "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl",
+ :source/short-name "dol"}
 
 
- :$onto/http:%%www.w3.org%1999%02%22-rdf-syntax-ns
-#:resource{:id :$onto/http:%%www.w3.org%1999%02%22-rdf-syntax-ns}
+ :$source/http:%%www.w3.org%1999%02%22-rdf-syntax-ns
+{:resource/id :$source/http:%%www.w3.org%1999%02%22-rdf-syntax-ns,
+ :source/long-name "http://www.w3.org/1999/02/22-rdf-syntax-ns",
+ :source/short-name "rdf"}
 
 
- :$onto/http:%%www.w3.org%2000%01%rdf-schema
-#:resource{:id :$onto/http:%%www.w3.org%2000%01%rdf-schema}
+ :$source/http:%%www.w3.org%2000%01%rdf-schema
+{:resource/id :$source/http:%%www.w3.org%2000%01%rdf-schema,
+ :source/long-name "http://www.w3.org/2000/01/rdf-schema",
+ :source/short-name "rdfs"}
 
 
- :$onto/http:%%www.w3.org%2001%XMLSchema
-#:resource{:id :$onto/http:%%www.w3.org%2001%XMLSchema}
+ :$source/http:%%www.w3.org%2001%XMLSchema
+{:resource/id :$source/http:%%www.w3.org%2001%XMLSchema,
+ :source/long-name "http://www.w3.org/2001/XMLSchema",
+ :source/short-name "xsd"}
 
 
- :$onto/http:%%www.w3.org%2002%07%owl
-#:resource{:id :$onto/http:%%www.w3.org%2002%07%owl}
-
-
- :$onto/http:%%www.w3.org%XML%1998%namespace
-#:resource{:id :$onto/http:%%www.w3.org%XML%1998%namespace}
+ :$source/http:%%www.w3.org%2002%07%owl
+{:resource/id :$source/http:%%www.w3.org%2002%07%owl,
+ :source/long-name "http://www.w3.org/2002/07/owl",
+ :source/short-name "owl"}
 
 
  :dol/abstract
@@ -593,6 +598,12 @@
  ["Perdurants (AKA occurrences) comprise what are variously called events, processes, phenomena, activities and states. They can have temporal parts or spatial parts. For instance, the first movement of (an execution of) a symphony is a temporal part of the symphony. On the other hand, the play performed by the left side of the orchestra is a spatial part. In both cases, these parts are occurrences themselves. We assume that objects cannot be parts of occurrences, but rather they participate in them. Perdurants extend in time by accumulating different temporal parts, so that, at any time they are present, they are only partially present, in  the sense that some of their proper temporal parts (e.g., their previous or future phases) may be not present. E.g., the piece of paper you are reading now is wholly present, while some temporal parts of your reading are not present yet, or any more. Philosophers say that endurants are entities that are in time, while lacking temporal parts (so to speak, all their parts flow with them in time). Perdurants, on the contrary, are entities that happen in time, and can have temporal parts (all their parts are fixed in time)."],
  :rdfs/subClassOf
  [:dol/spatio-temporal-particular
+  {:owl/allValuesFrom [:dol/perdurant],
+   :owl/onProperty :dol/part,
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/temporal-quality],
+   :owl/onProperty :dol/has-quality,
+   :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/temporal-location_q],
    :rdf/type :owl/Restriction}
@@ -601,12 +612,6 @@
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/perdurant],
    :owl/onProperty :dol/specific-constant-constituent,
-   :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/perdurant],
-   :owl/onProperty :dol/part,
-   :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/temporal-quality],
-   :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}],
  :resource/id :dol/perdurant}
 
@@ -618,14 +623,14 @@
  ["An endurant having a direct physical (at least spatial) quality."],
  :rdfs/subClassOf
  [:dol/endurant
+  {:owl/allValuesFrom [:dol/physical-quality],
+   :owl/onProperty :dol/has-quality,
+   :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
    :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/spatial-location_q],
-   :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/physical-quality],
-   :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
    :owl/onProperty :dol/part,
