@@ -1,6 +1,6 @@
 (ns pdenno.owl-db-tools.util
   (:require
-   [taoensso.timbre    :as log]))
+   [taoensso.timbre :as log]))
 
 (defn no-host&time-output-fn
   "I don't want :hostname_ and :timestamp_ in the log output."

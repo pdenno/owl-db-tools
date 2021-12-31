@@ -1,69 +1,41 @@
 (ns pdenno.owl-db-tools.core-test
   (:require
+   [clojure.set           :as sets]
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
    [datahike.pull-api     :as dp]
    [edu.ucdenver.ccp.kr.jena.kb]
    [pdenno.owl-db-tools.core :as owl]
-   [pdenno.owl-db-tools.util :as util]))
+   [pdenno.owl-db-tools.util :as util]
+   [taoensso.timbre          :as log]))
 
 (util/config-log :info)
-
-;;; ---------------- Small test case ----------------------------------
-(def small-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
-
-(def small-conn nil)
-
-(defn run-small-conn []
-   (when (d/database-exists? small-cfg) (d/delete-database small-cfg))
-  (alter-var-root (var small-conn)
-                  (fn [_]
-                     (owl/create-db! small-cfg
-                                     {"dol" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"}}
-                                     :rebuild? true))))
-
-(defn write-resources-map
-  "Writes a file data/example-dolce.edn used in testing testing.
-   It is NOT executed in testing."
-  []
-  (let [sorted-resources (-> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @small-conn) sort)]
-    (->> (with-out-str
-           (println "{")
-           (doseq [obj sorted-resources]
-             (println "\n\n" obj)
-             (pprint (owl/pull-resource obj @small-conn)))
-           (println "}"))
-         (spit "data/example-dolce.edn"))))
-
-(deftest small-onto-okay
-  (testing "that a small-sized ontology is captured correctly."
-    (let [resources (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @small-conn)]
-      (is (do (run-small-conn) (d/database-exists? small-cfg)))
-      (is (= (-> "data/example-dolce.edn" slurp read-string)
-             (zipmap resources
-                     (map #(owl/pull-resource % @small-conn) resources)))))))
 
 ;;; ---------------- Challenging small test case ----------------------------------
 ;;; This is challenging because it contains for example:
 ;;;   <owl:oneOf rdf:parseType="Collection">
 ;;;     <edns:theory rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl#s-communication-theory"/>
 ;;;   </owl:oneOf>
-
 (def info-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
+(def info-sources {"info"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"}})
+(def info-user-attrs [#:db{:ident :testing/found? :cardinality :db.cardinality/one :valueType :db.type/boolean}])
+(def info-atm nil)
 
-(def info-sources
-  {"info"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"}})
-
-(def info-conn nil)
-
-(defn run-info-conn []
-  (when (d/database-exists? info-cfg) (d/delete-database info-cfg))
-  (alter-var-root (var info-conn)
+(defn make-info-db [cfg]
+  (when (d/database-exists? cfg) (d/delete-database cfg))
+  (alter-var-root (var info-atm)
                   (fn [_]
-                    (owl/create-db! info-cfg
+                    (owl/create-db! cfg
                                     info-sources
+                                    :user-attrs info-user-attrs
                                     :rebuild? true))))
+
+(deftest user-and-learned-attrs
+  (testing "Testing that some attributes are learned and one more provided by the users is kept."
+    (is (every? identity ((juxt make-info-db d/database-exists?) info-cfg)))
+    (is (= #{:testing/found? :edns/defined-by :edns/specializes :edns/specialized-by :edns/defines}
+           (->> (owl/schema-attributes @info-atm) (map :db/ident) set)))))
 
 ;;; ---------------- Modal test case ----------------------------------
 (def modal-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
@@ -72,15 +44,77 @@
   {"edns"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
    "modal" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"}})
 
-(def modal-conn nil)
+(def modal-atm nil)
 
-(defn run-modal-conn []
-  (when (d/database-exists? modal-cfg) (d/delete-database modal-cfg))
-  (alter-var-root (var modal-conn)
+(defn make-modal-db [cfg]
+  (when (d/database-exists? modal-cfg) (d/delete-database cfg))
+  (alter-var-root (var modal-atm)
                   (fn [_]
-                    (owl/create-db! modal-cfg
+                    (owl/create-db! cfg
                                     modal-sources
                                     :rebuild? true))))
+
+(deftest modal-db-test ; ToDo: define more tests here to justify its existance.
+  (testing "Testing that some attributes are learned and one more provided by the users is kept."
+    (is (every? identity ((juxt make-modal-db d/database-exists?) modal-cfg)))))
+
+;;; ---------------- Medium test case ---------------------------------- ; ToDo This isn't so medium!
+(def medium-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
+(def medium-atm nil)
+
+(defn make-medium-db [cfg]
+   (when (d/database-exists? cfg) (d/delete-database cfg))
+  (alter-var-root (var medium-atm)
+                  (fn [_]
+                     (owl/create-db! cfg
+                                     {"dol" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"}}
+                                     :rebuild? true))))
+
+(defn write-resources-map
+  "Writes a file data/example-dolce.edn used in testing testing.
+   It is NOT executed in testing."
+  []
+  (make-medium-db medium-cfg)
+  (let [sorted-resources (-> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @medium-atm) sort)]
+    (->> (with-out-str
+           (println "{")
+           (doseq [obj sorted-resources]
+             (println "\n\n" obj)
+             (pprint (owl/pull-resource obj @medium-atm)))
+           (println "}"))
+         (spit "data/example-dolce.edn"))))
+
+(defn db-match?
+  "Check that the DB created is like the gold standard.
+   Do this outsided the test/is and by individual resource so that
+   testing/is doesn't return a horrendously large report."
+  [conn]
+  (let [gold (-> "data/example-dolce.edn" slurp read-string)
+        resources (owl/resource-ids conn)
+        silver  (zipmap resources
+                        (map #(owl/pull-resource % conn) resources))
+        gold-res   (-> gold keys set)
+        silver-res (-> silver keys set)
+        okay? (atom true)]
+    (when (not= gold-res silver-res)
+      (reset! okay? false)
+      (when-let [gold-extra (not-empty (sets/difference gold-res silver-res))]
+        (log/error "Correct has resources missing in test:" gold-extra))
+      (when-let [silver-extra (not-empty (sets/difference silver-res gold-res))]
+        (log/error "Test has resource not found in correct:" silver-extra))
+      (when @okay?
+        (doseq [res gold-res :while @okay?]
+          (when (not= (res gold) (res silver))
+            (reset! okay? false)
+            (log/error "Difference in resource" res)
+            (pprint (res gold))
+            (pprint (res silver))))))
+    @okay?))
+
+(deftest medium-onto-okay
+  (testing "Testing that a medium-sized ontology is captured correctly."
+      (is (every? identity ((juxt make-medium-db d/database-exists?) medium-cfg)))
+      (is (db-match? @medium-atm))))
 
 ;;; ---------------- Comprehensive test case ----------------------------------
 (def big-sources
@@ -107,27 +141,26 @@
 (def big-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"}
               :keep-history? false
               :schema-flexibility :write})
+(def big-atm nil)
 
-(def big-conn nil)
-
-(defn run-big-conn []
-  (when (d/database-exists? big-cfg) (d/delete-database big-cfg))
-  (alter-var-root (var big-conn)
+(defn make-big-db [cfg]
+  (when (d/database-exists? cfg) (d/delete-database cfg))
+  (alter-var-root (var big-atm)
                   (fn [_]
                     (owl/create-db!
-                     big-cfg
+                     cfg
                      big-sources
                      :rebuild? true
                      :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))))
 
 (deftest big-onto-okay
   (testing "Read a substantial amount of owl; make a tiny check ;^)"
-    (is (do (run-big-conn) (d/database-exists? big-cfg)))
+    (is (every? identity ((juxt make-big-db d/database-exists?) big-cfg)))
     (is (= [:dol/stative]
-           (-> (owl/pull-resource :dol/state @big-conn) :rdfs/subClassOf)))))
+           (-> (owl/pull-resource :dol/state @big-atm) :rdfs/subClassOf)))))
 
 (deftest check-resolve-rdf-lists []
-  (testing "that lists resolve correctly"
+  (testing "Testing that lists resolve correctly."
     (is (= #:temp{:t-301f5ece:17e06c5afb2:-77f6 [#:resource{:temp-ref :sem/s-communication-theory}]}
            (owl/resolve-rdf-lists
             [[:temp/t-301f5ece:17e06c5afb2:-77f7 :owl/oneOf :temp/t-301f5ece:17e06c5afb2:-77f6]
@@ -135,7 +168,7 @@
              [:temp/t-301f5ece:17e06c5afb2:-77f6 :rdf/first #:resource{:temp-ref :sem/s-communication-theory}]])))))
 
 ;;; Memory cleanup. I keep the file-based one around.
-(doseq [db [small-cfg info-cfg modal-cfg]]
+(doseq [db [medium-cfg info-cfg modal-cfg]]
   (when (d/database-exists? db)
     (d/delete-database db)))
 

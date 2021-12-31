@@ -1,6 +1,5 @@
 {
 
-
  :$source/http:%%www.daml.org%2001%03%daml+oil
 {:resource/id :$source/http:%%www.daml.org%2001%03%daml+oil,
  :source/long-name "http://www.daml.org/2001/03/daml+oil",
@@ -602,11 +601,11 @@
   {:owl/allValuesFrom [:dol/perdurant],
    :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/perdurant],
-   :owl/onProperty :dol/part,
-   :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/participant,
    :owl/someValuesFrom [:dol/endurant],
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/perdurant],
+   :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/temporal-quality],
    :owl/onProperty :dol/has-quality,
@@ -624,6 +623,9 @@
  ["An endurant having a direct physical (at least spatial) quality."],
  :rdfs/subClassOf
  [:dol/endurant
+  {:owl/onProperty :dol/has-quality,
+   :owl/someValuesFrom [:dol/spatial-location_q],
+   :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}
@@ -632,9 +634,6 @@
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-quality],
    :owl/onProperty :dol/has-quality,
-   :rdf/type :owl/Restriction}
-  {:owl/onProperty :dol/has-quality,
-   :owl/someValuesFrom [:dol/spatial-location_q],
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
    :owl/onProperty :dol/specific-constant-constituent,

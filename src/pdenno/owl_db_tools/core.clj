@@ -7,7 +7,7 @@
    [datahike.pull-api          :as dp]
    [edu.ucdenver.ccp.kr.kb     :as kb]      ; ToDo: This version of Jena uses log4j 1.2 which does not have the vulnerability:
    [edu.ucdenver.ccp.kr.jena.kb]            ; https://www.cisa.gov/uscert/apache-log4j-vulnerability-guidance
-   [edu.ucdenver.ccp.kr.rdf    :as rdf]     ; However,  some work is needed to avoid the a configuration warning.
+   [edu.ucdenver.ccp.kr.rdf    :as rdf]     ; However, some work is needed (a ToDo) to avoid a configuration warning.
    [edu.ucdenver.ccp.kr.sparql :as sparql]  ; See https://logging.apache.org/log4j/1.2/faq.html#a3.5
    [pdenno.owl-db-tools.util   :as util]
    [taoensso.timbre            :as log])
@@ -20,6 +20,8 @@
 
 ;;; ToDo:
 ;;;   - Add :user-schema to create-db!.
+;;;   - Add app/learned? to schema elements.
+;;;   - Write about API in the README
 ;;;   - Define a log4j configuration for Jena (or fork edu.ucdever.cpp.kr and fix it myself).
 ;;;   - Making resource on-the-fly: :owl/Class (investigate)
 ;;;   - Making resource on-the-fly: :owl/Restriction (investigate)
@@ -39,7 +41,8 @@
    #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These for useful when
    #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
    #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
-   #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}]) ; ref, but have one of these db.type.
+   #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
+   #:db{:ident :db/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; ToDo: OK to use db ns?
 
 (def owl-schema
    ;; multi-valued properties
@@ -315,7 +318,8 @@
         (when (not-any? #(= prop (:db/ident %)) @full-schema)
           (let [spec #:db{:ident prop
                           :cardinality (learn-cardinality prop examples)
-                          :valueType   (learn-type prop examples)}]
+                          :valueType   (learn-type prop examples)
+                          :db/origin :learned}]
             (log/debug "learned:" spec)
             (swap! learned #(conj % spec))
             (swap! full-schema #(conj % spec))))))
@@ -501,25 +505,26 @@
   "If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
    Otherwise, just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
-  [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild?] :or {check-sites-timeout 15000}}]
+  [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild? user-attrs] :or {check-sites-timeout 15000}}]
   (reset-for-new-db!)
   (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)
         load-ontos (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} ontos)]
     (cond (and rebuild? site-ok?)
           (do (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
               (d/create-database db-cfg)
-              (let [conn (d/connect db-cfg)]
+              (let [conn-atm (d/connect db-cfg)]
                 (log/info "Created schema DB")
-                (transact? conn @full-schema)
-                (transact? conn (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
+                (transact? conn-atm @full-schema)
+                (when user-attrs (->> user-attrs (mapv #(assoc % :db/origin :user)) (transact? conn-atm)))
+                (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
                 (doseq [onto-spec (vals load-ontos)]
                   (let [jkb (load-jena onto-spec)
                         jena-maps (sparql/query jkb '((?/x ?/y ?/z)))]
-                    (transact? conn (prefix-maps jkb conn))  ; URI to prefix maps from Jena loading the source
-                    (update-long2short! conn) ; This is for speed in keywordize-triple.
-                    (store-onto! conn jena-maps)
-                    (mark-as-stored onto-spec conn)))
-                conn)),
+                    (transact? conn-atm (prefix-maps jkb @conn-atm))  ; URI to prefix maps from Jena loading the source
+                    (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
+                    (store-onto! conn-atm jena-maps)
+                    (mark-as-stored onto-spec conn-atm)))
+                conn-atm)),
           (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
           (d/database-exists? db-cfg) (d/connect db-cfg)
           :else (log/warn "There is no DB to connect to."))))
@@ -548,13 +553,26 @@
 (defn resource-ids ; ToDo should/could this be lazy?
   "Return a vector of resource keywords"
   [conn]
-  (d/q '[:find [?name ...] :where [_ :resource/id ?name]] @conn))
+  (d/q '[:find [?name ...] :where [_ :resource/id ?name]] conn))
 
 (defn sources
   "Return maps describing what was loaded"
   [conn & {:keys [l2s]}]
-  (let [eids (d/q '[:find [?e ...] :where [?e :source/long-name _]] @conn)
-        maps (dp/pull-many @conn '[*] eids)]
+  (let [eids (d/q '[:find [?e ...] :where [?e :source/long-name _]] conn)
+        maps (dp/pull-many conn '[*] eids)]
     (if l2s
       (->> maps (reduce (fn [res m] (assoc res (:source/long-name m) (:source/short-name m))) {}))
       maps)))
+
+(defn schema-attributes
+  "Return a vector of maps of learned or user schema elements.
+   Arguments:
+     conn     - a database connection.
+     :origin  - an optional  keyword argument consisting of a set containing any of
+                #{:all, :learned :user}. The default value for this argument is #{:learned :user}."
+  [conn & {:keys [origin] :or {origin #{:learned :user}}}]
+  (let [attrs (d/q '[:find (pull ?e [*]) :where [?e :db/ident _]] conn)]
+    (cond->> attrs
+      true (map first)
+      (not (origin :all)) (filter #(origin (:db/origin %)))
+      true (sort-by :db/id))))
