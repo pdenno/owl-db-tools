@@ -21,8 +21,8 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-	     :keep-history? false
-	     :schema-flexibility :write})
+		 :keep-history? false
+		 :schema-flexibility :write})
 ```
 
 ### Specifying the data to store
@@ -80,9 +80,9 @@ The function create-db! takes the following optional keyword arguments:
  You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true.
  * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
    Of course, this argument is relevant only when `rebuild?` is true.
-   
- * `:user-attrs` a vector of Datahike attribute properties (see the section on 'Database Schema' below) to override the default attributes, 
- or attributes learned while reading data. 
+
+ * `:user-attrs` a vector of Datahike attribute properties (see the section on 'Database Schema' below) to override the default attributes,
+ or attributes learned while reading data.
 
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
@@ -96,7 +96,7 @@ For example, you can retrieve all the classes from the DOLCE namespace in the ex
 (require '[datahike.api :as d])
 
 (->> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @conn)
-     (filter #(= "dol" (namespace %))) sort)
+	 (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
@@ -131,6 +131,24 @@ It returns a map of all the triples associated with the resource-id
   {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/specific-constant-constituent, :rdf/type :owl/Restriction}],
  :resource/id :dol/perdurant}
 ```
+
+### `resource-ids`
+
+`resource-ids` takes one argument, the database connection and returns a vector of resource IDs (namespaced keyword).
+
+### `sources`
+
+`sources` takes one required argument, the database connection and returns a map of  information about sources read.
+
+An optional boolean keyword argument `:l2s` (meaning 'long to short') can be specified to return a simple map of
+resource URI strings (the map keys) to short-names used as the namespaces of keyword resource IDs.
+
+### `schema-attributes`
+
+`schema-attributes` takes one required argument, the database connection and returns a map of database attribute specs.
+
+An optional keyword argument `:origin` can be provided with one or more elements from the set `#{:all, :learned, :user}`
+to filter the result to user-specified, learned, or all attributes. The default is `#{:learned :user}`.
 
 ## Database Schema
 

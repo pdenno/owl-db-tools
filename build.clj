@@ -1,7 +1,7 @@
 (ns build
   (:require [clojure.tools.build.api :as b]))
 
-;;; I don't yet use any of code in this file.
+;;; I don't yet use any of the code in this file.
 ;;; I'm using something like the Practicalli deps.edn. (See the deps.edn)
 ;;; If I were to use this, it would work as follows (See also https://clojure.org/guides/tools_build):
 ;;;   clj -T:build clean
