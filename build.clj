@@ -1,28 +1,12 @@
 (ns build
   (:require [clojure.tools.build.api :as b]))
 
-;;; THE FOLLOWING IS WHAT I USE. (manual copy because clj -X:deps mvn-install can't find the jar.)
-;;;
-;;;    clj -X:jar 
-;;;    clj -X:install
-;;;    mkdir -p ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
-;;;    cp owl-db-tools-1.0.22.jar pom.xml ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
-
-;;; Do I really need to change directories here? (I changed above to 'cp' 
-;;; pushd ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/ 
-;;; CLOJARS_USERNAME=pdenno
-;;; CLOJARS_PASSWORD=
-;;; clojure -M:project/clojars owl-db-tools-1.0.22.jar
-
-
-
-;;; I don't yet use any of code in this file. It would work like this
-;;; https://clojure.org/guides/tools_build
-;;; Run this with the following:
+;;; I don't yet use any of code in this file.
+;;; I'm using something like the Practicalli deps.edn. (See the deps.edn)
+;;; If I were to use this, it would work as follows (See also https://clojure.org/guides/tools_build):
 ;;;   clj -T:build clean
 ;;;   clj -T:build jar
 ;;;   clj -T:build install
-
 
 (def lib 'com.github.pdenno/owl-db-tools)
 (def version (format "1.0.%s" (b/git-count-revs nil)))
