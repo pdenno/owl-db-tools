@@ -1,16 +1,18 @@
 # owl-db-tools - a library for reading OWL into a Datahike database
 
-This library uses clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies 
-into a [Datahike](https://datahike.io/) database. 
+This library uses clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies
+into a [Datahike](https://datahike.io/) database.
 
-The library is currently in its early stages of development, though it should be usable with not much effort. 
+The library is still young, though its basic features have been tested.
+
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.pdenno/owl-db-tools.svg)](https://clojars.org/com.github.pdenno/owl-db-tools)
 
 ## Usage
 
-There are three steps to getting started: 
+There are three steps to getting started:
    1. configuring the database,
    2. specifying the data to store, and
-   3. creating the database. 
+   3. creating the database.
 
 ### Configuring the database
 
@@ -19,16 +21,16 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-             :keep-history? false
-             :schema-flexibility :write})
+	     :keep-history? false
+	     :schema-flexibility :write})
 ```
 
 ### Specifying the data to store
 
 Data sources are defined as map entries in nested maps keyed by a prefix (string) that is used as the namespace of a keywords naming each resource associated with the sources URI.
-For example, the following defines two sources; 
+For example, the following defines two sources;
 the first is DOLCE-Lite, retrieved from a remote location;
-the second is a local ontology in turtle syntax. 
+the second is a local ontology in turtle syntax.
 
 ```clojure
 (def onto-sources
@@ -36,18 +38,18 @@ the second is a local ontology in turtle syntax.
    "mod"   {:uri "http://modelmeth.nist.gov/modeling", :access "data/modeling.ttl", :format :turtle}})
 ```
 
-The key of the outer map defines a shortname for the resource; it provides a namespace for unique identifiers used in the DB in lieu of the IRI string. 
-The value of the outer map is a map providing the details about the source file to be read. The map keys are defined below. 
-In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state. 
+The key of the outer map defines a shortname for the resource; it provides a namespace for unique identifiers used in the DB in lieu of the IRI string.
+The value of the outer map is a map providing the details about the source file to be read. The map keys are defined below.
+In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state.
 
 The following keywords are used in the sources:
- * `:uri` the URI of the OWL file to be read, 
+ * `:uri` the URI of the OWL file to be read,
  * `:access` a pathname to a local copy of the OWL file (for use where it won't be found at the provided URI, for example).
- * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only 
- two tested are :rdfxml and :turtle. 
+ * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only
+ two tested are :rdfxml and :turtle.
  * `:ref-only?` this is used suppress reading content but nonethess establish a relationship between a namespace prefix and a URI.
  There is a default set of these that can be overidden with values from the sources you provide (such as `onto-sources` above):
- 
+
 ```clojure
 {"daml"  {:uri "http://www.daml.org/2001/03/daml+oil"       :ref-only? true},
  "dc"    {:uri "http://purl.org/dc/elements/1.1/"           :ref-only? true},
@@ -58,48 +60,59 @@ The following keywords are used in the sources:
  "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
 ```
 
-
 ### Creating the Database
 
-With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a call to a connection to the database. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. 
+With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a call to a connection to the database. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument.
 
 ```clojure
 (require '[pdenno.owl-db-tools.core :as owl])
 
 (owl/create-db! db-cfg onto-sources
-                :rebuild? true
-                :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
+		:rebuild? true
+		:check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"])
 ```
 
 The function create-db! takes the following optional keyword arguments:
 
  * `:rebuild?` if `true` reads the sources, otherwise presumably the database exists and a connection to it is returned.
 
- * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies. 
- You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true. 
+ * `:check-sites` is a collection of sites (their URIs) that are sources for ontologies.
+ You can use this to abort reading when a source site is not available. This can be used only when `rebuild?` is true.
  * `:check-sites-timeout` is the number of milliseconds to wait for a response from a check-site. (Defaults to 15000.)
-   Of course, this argument is relevant only when `rebuild?` is true. 
+   Of course, this argument is relevant only when `rebuild?` is true.
+   
+ * `:user-attrs` a vector of Datahike attribute properties (see the section on 'Database Schema' below) to override the default attributes, 
+ or attributes learned while reading data. 
 
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
 
-### Queries
+## Queries
 
-For the most part, you would use Datahike's query and pull for APIs to access the data. 
+For the most part, you would use Datahike's query and pull for APIs to access the data.
 For example, you can retrieve all the classes from the DOLCE namespace in the example in the test directory using a datalog query such as the following:
 
 ```clojure
 (require '[datahike.api :as d])
 
-(->> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @conn) 
+(->> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @conn)
      (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
 ```
 
-However, the library also provides `pull-resource` which takes as arguments a resource-id and a database connection.
+You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
+
+## API
+
+In addition to `create-db` described above, the following are provided as a convenience:
+
+### `pull-resource`
+
+`pull-resource` takes as arguments a resource-id and a database connection.
 It returns a map of all the triples associated with the resource-id
+
 
 ```clojure
 (owl/pull-resource :dol/perdurant conn)
@@ -119,18 +132,28 @@ It returns a map of all the triples associated with the resource-id
  :resource/id :dol/perdurant}
 ```
 
-You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
-
 ## Database Schema
 
-The database is structured as shown. 
-Details about such  schema can be found in the [Datahike schema docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/schema). 
+The schema is described here:
+
+The database is structured as shown.
+Details about such schema can be found in the [Datahike schema docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/schema).
 
 ```clojure
-  [#:db{:ident :resource/id  :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+(def app-schema
+  [#:db{:ident :resource/id       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+   #:db{:ident :source/short-name :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/long-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/loaded?    :cardinality :db.cardinality/one :valueType :db.type/boolean}
+   #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These for useful when
+   #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
+   #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
+   #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
+   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 
+(def owl-schema
    ;; multi-valued properties
-   #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
+  [#:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/disjointWith       :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/ref}
@@ -156,12 +179,7 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
    #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/ref}
-   #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}
-
-   #:db{:ident :owl/string-val     :cardinality :db.cardinality/one :valueType :db.type/string}
-   #:db{:ident :owl/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/keyword}
-   #:db{:ident :owl/number-val     :cardinality :db.cardinality/one :valueType :db.type/number}
-   #:db{:ident :owl/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/boolean}])
+   #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}])
 
 (def rdfs-schema
   [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/ref}
@@ -169,28 +187,24 @@ Details about such  schema can be found in the [Datahike schema docs](https://cl
    #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
-   
+
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
    #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/ref}])
 
 (def rdf-schema
-  [#:db{:ident :rdf/type :cardinality :db.cardinality/one :valueType :db.type/keyword}])
+  [#:db{:ident :rdf/type      :cardinality :db.cardinality/one :valueType :db.type/ref} ; boxed because not always a keyword.
+   #:db{:ident :rdf/parseType :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 ```
 
 ## To Do
 
-* Ontologies imported by `owl:imports` are not automatically loaded. If you want them, 
-  you must reference them in the call to `create-db!`. 
-
-* There is not yet a distributed jar file (e.g. on clojars). 
-
-* Some simplification of the database to a more usable logical structure might be in order. 
-  For example, I don't think there is any reason to have :temp/ resources. 
-  In this regard I've only eliminated :rdf/List so far. 
+* Ontologies imported by `owl:imports` are not automatically loaded. If you want them,
+  you must reference them in the call to `create-db!`. This might be for the best, since it is a chance to
+  define meaningful short names.
 
 ## Disclaimer
 
-This software was developed by [NIST](http://nist/gov). [This disclaimer](https://www.nist.gov/el/software-disclaimer) applies. 
+This software was developed by [NIST](http://nist/gov). [This disclaimer](https://www.nist.gov/el/software-disclaimer) applies.
 
 ## References
 
@@ -199,11 +213,3 @@ This software was developed by [NIST](http://nist/gov). [This disclaimer](https:
 # Contact Us
 
 <a target="_blank" href="mailto:peter.denno@nist.gov">Peter Denno (peter.denno ( at ) nist.gov</a>
-
-
-
-
-
-
-
-

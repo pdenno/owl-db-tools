@@ -3,9 +3,17 @@
 
 ;;; THE FOLLOWING IS WHAT I USE. (manual copy because clj -X:deps mvn-install can't find the jar.)
 ;;;
-;;;    clj -X:jar :jar owl-db-tools-1.0.22.jar :sync-pom true :version '"1.0.22"' :group-id com.github.pdenno :artifact-id owl-db-tools
+;;;    clj -X:jar 
+;;;    clj -X:install
 ;;;    mkdir -p ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
-;;;    mv owl-db-tools-1.0.22.jar pom.xml ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
+;;;    cp owl-db-tools-1.0.22.jar pom.xml ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
+
+;;; Do I really need to change directories here? (I changed above to 'cp' 
+;;; pushd ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/ 
+;;; CLOJARS_USERNAME=pdenno
+;;; CLOJARS_PASSWORD=
+;;; clojure -M:project/clojars owl-db-tools-1.0.22.jar
+
 
 
 ;;; I don't yet use any of code in this file. It would work like this

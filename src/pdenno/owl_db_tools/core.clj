@@ -37,11 +37,11 @@
    #:db{:ident :source/short-name :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
    #:db{:ident :source/long-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
    #:db{:ident :source/loaded?    :cardinality :db.cardinality/one :valueType :db.type/boolean}
-   #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These for useful when
+   #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These are useful when
    #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
    #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
    #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
-   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; ToDo: OK to use db ns?
+   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 
 (def owl-schema
    ;; multi-valued properties

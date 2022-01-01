@@ -11,15 +11,25 @@
             :build {:deps {io.github.clojure/tools.build {:git/tag "v0.7.4" :git/sha "ac442da"}}
                     :ns-default build}
 
-            ;; clj -X:jar :jar owl-db-tools-1.0.21.jar :sync-pom true :version '"1.0.21"' :group-id com.github.pdenno :artifact-id owl-db-tools
+            ;; clj -X:jar ; clj -X:install ; clj -X:deploy
+            ;; env CLOJARS_USERNAME=pdenno CLOJARS_PASSWORD=CLOJARS_b2b8... clj -X:deploy
+            ;; :jar owl-db-tools-1.0.21.jar :sync-pom true :version '"1.0.21"' :group-id com.github.pdenno :artifact-id owl-db-tools
             :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                   :exec-fn hf.depstar/jar
-                  :exec-args {}}
+                  :exec-args {:jar "owl-db-tools-1.0.23.jar"
+                              :sync-pom true
+                              :version "1.0.23"
+                              :group-id "com.github.pdenno"
+                              :artifact-id "owl-db-tools"}}
 
             :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
                       :exec-fn deps-deploy.deps-deploy/deploy
-                      :exec-args {:installer :local :artifact "owl-db-tools.jar"}}
-
+                      :exec-args {:installer :local
+                                  :artifact "owl-db-tools-1.0.23.jar"}}
+            
             :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
-                     :exec-args {:installer :remote :artifact "owl-db-tools.jar"}}}}
+                     :exec-args {:installer :remote
+                                 :sign-releases? true
+                                 :sign-key-id "A301..."
+                                 :artifact "owl-db-tools-1.0.23.jar"}}}}
