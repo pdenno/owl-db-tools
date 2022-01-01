@@ -1,19 +1,18 @@
 {:paths ["src" "resources"]
  :deps {com.taoensso/timbre           {:mvn/version "5.1.2"}
         edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
-        io.replikativ/datahike        {:mvn/version "0.4.1473"}
+        io.replikativ/datahike        {:mvn/version "0.4.1479"}
         org.clojure/clojure           {:mvn/version "1.10.3"}
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
 
  :aliases  {:test {:extra-paths ["test"]
                    :extra-deps  {lambdaisland/kaocha {:mvn/version "1.60.972"}}}
 
-            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.7.4" :git/sha "ac442da"}}
-                    :ns-default build}
+            #_#_:build {:deps {io.github.clojure/tools.build {:git/tag "v0.7.4" :git/sha "ac442da"}}
+                    :ns-default build} ; Left here as an example.
 
             ;; clj -X:jar ; clj -X:install ; clj -X:deploy
             ;; env CLOJARS_USERNAME=pdenno CLOJARS_PASSWORD=CLOJARS_b2b8... clj -X:deploy
-            ;; :jar owl-db-tools-1.0.21.jar :sync-pom true :version '"1.0.21"' :group-id com.github.pdenno :artifact-id owl-db-tools
             :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                   :exec-fn hf.depstar/jar
                   :exec-args {:jar "owl-db-tools-1.0.23.jar"
@@ -22,14 +21,14 @@
                               :group-id "com.github.pdenno"
                               :artifact-id "owl-db-tools"}}
 
-            :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+            :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                       :exec-fn deps-deploy.deps-deploy/deploy
                       :exec-args {:installer :local
                                   :artifact "owl-db-tools-1.0.23.jar"}}
             
-            :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+            :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
                                  :sign-releases? true
-                                 :sign-key-id "A301..."
+                                 :sign-key-id "A301..."  ;<=====================
                                  :artifact "owl-db-tools-1.0.23.jar"}}}}
