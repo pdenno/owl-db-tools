@@ -1,13 +1,22 @@
 (ns build
   (:require [clojure.tools.build.api :as b]))
 
+;;; THE FOLLOWING IS WHAT I USE. (manual copy because clj -X:deps mvn-install can't find the jar.)
+;;;
+;;;    clj -X:jar :jar owl-db-tools-1.0.22.jar :sync-pom true :version '"1.0.22"' :group-id com.github.pdenno :artifact-id owl-db-tools
+;;;    mkdir -p ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
+;;;    mv owl-db-tools-1.0.22.jar pom.xml ~/.m2/repository/com/github/pdenno/owl-db-tools/1.0.22/
+
+
+;;; I don't yet use any of code in this file. It would work like this
 ;;; https://clojure.org/guides/tools_build
 ;;; Run this with the following:
 ;;;   clj -T:build clean
 ;;;   clj -T:build jar
 ;;;   clj -T:build install
 
-(def lib 'com.github.pdenno/clojure-db-tools)
+
+(def lib 'com.github.pdenno/owl-db-tools)
 (def version (format "1.0.%s" (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))

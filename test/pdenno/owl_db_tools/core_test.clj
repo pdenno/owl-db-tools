@@ -153,12 +153,14 @@
                      :rebuild? true
                      :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))))
 
-(deftest big-onto-okay
+;;; Temporary -- too slow 
+#_(deftest big-onto-okay
   (testing "Read a substantial amount of owl; make a tiny check ;^)"
     (is (every? identity ((juxt make-big-db d/database-exists?) big-cfg)))
     (is (= [:dol/stative]
            (-> (owl/pull-resource :dol/state @big-atm) :rdfs/subClassOf)))))
 
+;;;---------------------- Component tests --------------------------------------
 (deftest check-resolve-rdf-lists []
   (testing "Testing that lists resolve correctly."
     (is (= #:temp{:t-301f5ece:17e06c5afb2:-77f6 [#:resource{:temp-ref :sem/s-communication-theory}]}

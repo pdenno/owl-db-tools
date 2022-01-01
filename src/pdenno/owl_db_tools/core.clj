@@ -1,7 +1,6 @@
 (ns pdenno.owl-db-tools.core
   "Load the datahike (DH) database from Jena content; define pathom resolvers."
   (:require
-   [cheshire.core]
    [clojure.string             :as str]
    [datahike.api               :as d]
    [datahike.pull-api          :as dp]
@@ -42,7 +41,7 @@
    #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
    #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
    #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
-   #:db{:ident :db/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; ToDo: OK to use db ns?
+   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; ToDo: OK to use db ns?
 
 (def owl-schema
    ;; multi-valued properties
@@ -319,7 +318,7 @@
           (let [spec #:db{:ident prop
                           :cardinality (learn-cardinality prop examples)
                           :valueType   (learn-type prop examples)
-                          :db/origin :learned}]
+                          :app/origin :learned}]
             (log/debug "learned:" spec)
             (swap! learned #(conj % spec))
             (swap! full-schema #(conj % spec))))))
@@ -515,7 +514,7 @@
               (let [conn-atm (d/connect db-cfg)]
                 (log/info "Created schema DB")
                 (transact? conn-atm @full-schema)
-                (when user-attrs (->> user-attrs (mapv #(assoc % :db/origin :user)) (transact? conn-atm)))
+                (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
                 (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
                 (doseq [onto-spec (vals load-ontos)]
                   (let [jkb (load-jena onto-spec)
@@ -574,5 +573,5 @@
   (let [attrs (d/q '[:find (pull ?e [*]) :where [?e :db/ident _]] conn)]
     (cond->> attrs
       true (map first)
-      (not (origin :all)) (filter #(origin (:db/origin %)))
+      (not (origin :all)) (filter #(origin (:app/origin %)))
       true (sort-by :db/id))))
