@@ -512,7 +512,7 @@
           (do (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
               (d/create-database db-cfg)
               (let [conn-atm (d/connect db-cfg)]
-                (log/info "Created schema DB")
+                (log/info "Initializing a fresh DB.")
                 (transact? conn-atm @full-schema)
                 (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
                 (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
@@ -535,9 +535,11 @@
                    (try (dp/pull conn '[*] [:resource/id resource-id])
                         (catch Exception _e nil)))]
     (letfn [(subobj [x]
-              (cond (and (map? x) (contains? x :resource/id)) (:resource/id x),         ; It is a whole resource, return ref.
-                    (and (map? x) (contains? x :db/id) (== (count x) 1))                ; It is an object ref...
-                    (or (d/q `[:find ?id . :where [~(:db/id x) :resource/id ?id]] conn) ; ...return keyword if it is a resource...
+              (cond (and (map? x) (contains? x :resource/id)) (:resource/id x),               ; It is a whole resource, return ref.
+                    (and (map? x) (contains? x :db/id) (== (count x) 1))                      ; It is an object ref...
+                    (or (and (map? x)
+                             (contains? x :db/id)
+                             (d/q `[:find ?id . :where [~(:db/id x) :resource/id ?id]] conn)) ; ...return keyword if it is a resource...
                         (subobj (dp/pull conn '[*] (:db/id x)))),                       ; ...otherwise it is some other structure.
                     (map? x) (reduce-kv (fn [m k v] (assoc m k (subobj v))) {} x),
                     (vector? x) (mapv subobj x),

@@ -127,8 +127,8 @@
    "edns"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
    "fpar"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
    "info"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
-   "mod"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
-   "pla"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
+   "modal"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
+   "plan"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
    "sem"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
    "space"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
    "soc"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
@@ -141,7 +141,8 @@
 (def big-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"}
               :keep-history? false
               :schema-flexibility :write})
-(def big-atm nil)
+
+(def big-atm (d/connect big-cfg))
 
 (defn make-big-db [cfg]
   (when (d/database-exists? cfg) (d/delete-database cfg))
