@@ -192,3 +192,4 @@
       (d/transact (d/connect cfg) [{:class-b/ref eid}])
       #_(d/q '[:find ?e ?a ?v :where [?e ?a ?v]] @(d/connect cfg))
       (dp/pull-many @(d/connect cfg) '[*] [1 2 3 4]))))
+

@@ -577,3 +577,4 @@
       true (map first)
       (not (origin :all)) (filter #(origin (:app/origin %)))
       true (sort-by :db/id))))
+
