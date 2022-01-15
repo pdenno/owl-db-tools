@@ -154,7 +154,7 @@
                      :rebuild? true
                      :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))))
 
-;;; Temporary -- too slow 
+;;; This one takes some time, so I don't always run it.
 #_(deftest big-onto-okay
   (testing "Read a substantial amount of owl; make a tiny check ;^)"
     (is (every? identity ((juxt make-big-db d/database-exists?) big-cfg)))
@@ -192,4 +192,3 @@
       (d/transact (d/connect cfg) [{:class-b/ref eid}])
       #_(d/q '[:find ?e ?a ?v :where [?e ?a ?v]] @(d/connect cfg))
       (dp/pull-many @(d/connect cfg) '[*] [1 2 3 4]))))
-

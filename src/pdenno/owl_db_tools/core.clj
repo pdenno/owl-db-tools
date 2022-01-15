@@ -73,11 +73,12 @@
    #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}])
 
+;;; Where a property P has more than one rdfs:domain property, then the resources denoted by subjects of triples
+;;; with predicate P are instances of all the classes stated by the rdfs:domain properties.
 (def rdfs-schema
-  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many :valueType :db.type/ref}
-   #:db{:ident :rdfs/range         :cardinality :db.cardinality/many :valueType :db.type/ref}
+  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many  :valueType :db.type/ref}
+   #:db{:ident :rdfs/range         :cardinality :db.cardinality/many  :valueType :db.type/ref}
    #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
-   #:db{:ident :rdfs/label         :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
 
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
@@ -395,11 +396,35 @@
                 @progress?  (recur new-maps (inc count))
                 :else new-maps))))))
 
+(defn distinct-temps ; ToDo: examine how this becomes necessary.
+  "The maps from resolve-temps :perm-data can contain field values that contain temps.
+   The values the temps refer to ought to be unique. If they aren't this function
+   returns the map with such vectors dropping the duplicates."
+  [mm temps]
+  (letfn [(dt-aux [vval]
+            (let [seen? (atom #{})]
+              (reduce (fn [res v]
+                        (if (temp-id? v)
+                          (if (@seen? (get temps v))
+                            res
+                            (do (swap! seen? conj (get temps v))
+                                (conj res v)))
+                          (conj res v)))
+                      []
+                      vval)))]
+    (reduce-kv (fn [m k v]
+                 (if (vector? v)
+                   (assoc m k (dt-aux v))
+                   (assoc m k v)))
+               {}
+               mm)))
+
 (defn resolve-temps
   "Replace every temp reference with its value. Argument is a vector of maps."
   [dmapv]
   (let [{:keys [temp-data perm-data]} (partition-temp-perm dmapv)
-        temp-data (resolve-temp-internal temp-data)]
+        temp-data (resolve-temp-internal temp-data)
+        perm-data (mapv #(distinct-temps % temp-data) perm-data)]
     (letfn [(rt-aux [obj]
               (cond (temp-id? obj)
                     (or (get temp-data obj) (throw (ex-info  "Could not find obj" {:obj obj}))),
@@ -577,4 +602,3 @@
       true (map first)
       (not (origin :all)) (filter #(origin (:app/origin %)))
       true (sort-by :db/id))))
-
