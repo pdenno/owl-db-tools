@@ -26,6 +26,7 @@
 ;;;   - Making resource on-the-fly: :owl/Restriction (investigate)
 
 (declare sources)
+(def ^:dynamic *conn* "A dynamic var that is bound to a DB connection on db-create" nil)
 
 (def debugging? false)
 (util/config-log (if debugging? :debug :info))
@@ -548,33 +549,11 @@
                     (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
                     (store-onto! conn-atm jena-maps)
                     (mark-as-stored onto-spec conn-atm)))
-                conn-atm)),
+                 (alter-var-root (var *conn*) (fn [_] @conn-atm)))),
           (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
-          (d/database-exists? db-cfg) (d/connect db-cfg)
+          (d/database-exists? db-cfg)
+          (alter-var-root (var *conn*) (fn [_] @(d/connect db-cfg)))
           :else (log/warn "There is no DB to connect to."))))
-
-(defn pull-resource
-  "Return the map of a resource."
-  [resource-id conn & {:keys [keep-db-ids?]}]
-  (when-let [obj (binding [log/*config* (assoc log/*config* :min-level :fatal)] ; ToDo macro pattern for pull.
-                   (try (dp/pull conn '[*] [:resource/id resource-id])
-                        (catch Exception _e nil)))]
-    (letfn [(subobj [x]
-              (cond (and (map? x) (contains? x :resource/id)) (:resource/id x),               ; It is a whole resource, return ref.
-                    (and (map? x) (contains? x :db/id) (== (count x) 1))                      ; It is an object ref...
-                    (or (and (map? x)
-                             (contains? x :db/id)
-                             (d/q `[:find ?id . :where [~(:db/id x) :resource/id ?id]] conn)) ; ...return keyword if it is a resource...
-                        (subobj (dp/pull conn '[*] (:db/id x)))),                       ; ...otherwise it is some other structure.
-                    (map? x) (reduce-kv (fn [m k v] (assoc m k (subobj v))) {} x),
-                    (vector? x) (mapv subobj x),
-                    :else x))
-            (rem-db-ids [x]
-              (cond (map? x) (->> (dissoc x :db/id) (reduce-kv (fn [m k v] (assoc m k (rem-db-ids v))) {})),
-                    (vector? x) (mapv rem-db-ids x)
-                    :else x))]
-      (cond-> (reduce-kv (fn [m k v] (assoc m k (subobj v))) {} obj)
-        (not keep-db-ids?) rem-db-ids))))
 
 (defn resource-ids ; ToDo should/could this be lazy?
   "Return a vector of resource keywords"

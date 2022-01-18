@@ -11,7 +11,7 @@
 
             :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                   :exec-fn hf.depstar/jar
-                  :exec-args {:jar "owl-db-tools-1.0.31.jar"
+                  :exec-args {:jar "owl-db-tools-1.0.33.jar"
                               :sync-pom true
                               :version "1.0.31"
                               :group-id "com.github.pdenno"
@@ -20,10 +20,10 @@
             :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                       :exec-fn deps-deploy.deps-deploy/deploy
                       :exec-args {:installer :local
-                                  :artifact "owl-db-tools-1.0.31.jar"}}
+                                  :artifact "owl-db-tools-1.0.33.jar"}}
 
             :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
                                  :sign-releases? true
-                                 :artifact "owl-db-tools-1.0.31.jar"}}}}
+                                 :artifact "owl-db-tools-1.0.33.jar"}}}}

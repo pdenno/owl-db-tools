@@ -4,32 +4,30 @@
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
-   [datahike.pull-api     :as dp]
    [edu.ucdenver.ccp.kr.jena.kb]
    [pdenno.owl-db-tools.core :as owl]
    [pdenno.owl-db-tools.util :as util]
+   [pdenno.owl-db-tools.resolvers :as res]
    [taoensso.timbre          :as log]))
 
 (util/config-log :info)
 
 ;;; ---------------- Challenging small test case ----------------------------------
-;;; This is challenging because it contains for example:
+;;; The "challenge" here is just dealing with some instance data, such as:
 ;;;   <owl:oneOf rdf:parseType="Collection">
 ;;;     <edns:theory rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl#s-communication-theory"/>
 ;;;   </owl:oneOf>
 (def info-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
 (def info-sources {"info"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"}})
 (def info-user-attrs [#:db{:ident :testing/found? :cardinality :db.cardinality/one :valueType :db.type/boolean}])
-(def info-atm nil)
+(def info-atm (atom nil))
 
 (defn make-info-db [cfg]
   (when (d/database-exists? cfg) (d/delete-database cfg))
-  (alter-var-root (var info-atm)
-                  (fn [_]
-                    (owl/create-db! cfg
-                                    info-sources
-                                    :user-attrs info-user-attrs
-                                    :rebuild? true))))
+  (reset! info-atm (owl/create-db! cfg
+                                   info-sources
+                                   :user-attrs info-user-attrs
+                                   :rebuild? true)))
 
 (deftest user-and-learned-attrs
   (testing "Testing that some attributes are learned and one more provided by the users is kept."
@@ -44,15 +42,11 @@
   {"edns"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
    "modal" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"}})
 
-(def modal-atm nil)
+(def modal-atm (atom nil))
 
 (defn make-modal-db [cfg]
   (when (d/database-exists? modal-cfg) (d/delete-database cfg))
-  (alter-var-root (var modal-atm)
-                  (fn [_]
-                    (owl/create-db! cfg
-                                    modal-sources
-                                    :rebuild? true))))
+  (reset! modal-atm (owl/create-db! cfg modal-sources :rebuild? true)))
 
 (deftest modal-db-test ; ToDo: define more tests here to justify its existance.
   (testing "Testing that some attributes are learned and one more provided by the users is kept."
@@ -60,15 +54,13 @@
 
 ;;; ---------------- Medium test case ---------------------------------- ; ToDo This isn't so medium!
 (def medium-cfg {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write})
-(def medium-atm nil)
+(def medium-atm (atom nil))
 
 (defn make-medium-db [cfg]
    (when (d/database-exists? cfg) (d/delete-database cfg))
-  (alter-var-root (var medium-atm)
-                  (fn [_]
-                     (owl/create-db! cfg
+  (reset! medium-atm (owl/create-db! cfg
                                      {"dol" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"}}
-                                     :rebuild? true))))
+                                     :rebuild? true)))
 
 (defn write-resources-map
   "Writes a file data/example-dolce.edn used in testing testing.
@@ -80,7 +72,7 @@
            (println "{")
            (doseq [obj sorted-resources]
              (println "\n\n" obj)
-             (pprint (owl/pull-resource obj @medium-atm)))
+             (pprint (res/pull-resource obj @medium-atm)))
            (println "}"))
          (spit "data/example-dolce.edn"))))
 
@@ -92,7 +84,7 @@
   (let [gold (-> "data/example-dolce.edn" slurp read-string)
         resources (owl/resource-ids conn)
         silver  (zipmap resources
-                        (map #(owl/pull-resource % conn) resources))
+                        (map #(res/pull-resource % conn) resources))
         gold-res   (-> gold keys set)
         silver-res (-> silver keys set)
         okay? (atom true)]
@@ -116,51 +108,6 @@
       (is (every? identity ((juxt make-medium-db d/database-exists?) medium-cfg)))
       (is (db-match? @medium-atm))))
 
-;;; ---------------- Comprehensive test case ----------------------------------
-(def big-sources
-  {"cause"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl"  :ref-only? true},
-   "coll"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"},
-   "colv"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl"},
-   "common" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/CommonSenseMapping.owl"},
-   "dlp"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DLP_397.owl"},
-   "dol"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
-   "edns"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
-   "fpar"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
-   "info"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
-   "modal"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
-   "plan"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
-   "sem"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
-   "space"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
-   "soc"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
-   "sys"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl"},
-   "time"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"},
-
-   "model"  {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
-   "ops"    {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}})
-
-(def big-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"}
-              :keep-history? false
-              :schema-flexibility :write})
-
-(def big-atm (d/connect big-cfg))
-
-(defn make-big-db [cfg]
-  (when (d/database-exists? cfg) (d/delete-database cfg))
-  (alter-var-root (var big-atm)
-                  (fn [_]
-                    (owl/create-db!
-                     cfg
-                     big-sources
-                     :rebuild? true
-                     :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))))
-
-;;; This one takes some time, so I don't always run it.
-#_(deftest big-onto-okay
-  (testing "Read a substantial amount of owl; make a tiny check ;^)"
-    (is (every? identity ((juxt make-big-db d/database-exists?) big-cfg)))
-    (is (= [:dol/stative]
-           (-> (owl/pull-resource :dol/state @big-atm) :rdfs/subClassOf)))))
-
 ;;;---------------------- Component tests --------------------------------------
 (deftest check-resolve-rdf-lists []
   (testing "Testing that lists resolve correctly."
@@ -174,21 +121,3 @@
 (doseq [db [medium-cfg info-cfg modal-cfg]]
   (when (d/database-exists? db)
     (d/delete-database db)))
-
-;;;---------------------- Random investigations --------------------------------------
-(defn verify-ref-idea
-  "This probably follows directly from design of DH, but...
-    (1) Verify that it is possible to avoid use of :resource/ref by resolving references.
-    (2) Verify that the reference is made using just the integer, not {:db/id the-integer}."
-  []
-  (let [cfg  {:store {:backend :mem :id "test"} :keep-history? false :schema-flexibility :write}]
-    (when (d/database-exists? cfg) (d/delete-database cfg))
-    (d/create-database cfg)
-    (d/transact (d/connect cfg)
-                [#:db{:ident :class-a/id  :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
-                 #:db{:ident :class-b/ref :cardinality :db.cardinality/one :valueType :db.type/ref}])
-    (d/transact (d/connect cfg) [{:class-a/id :class-a-1}])
-    (let [eid (d/q '[:find ?e . :where [?e :class-a/id :class-a-1]] @(d/connect cfg))]
-      (d/transact (d/connect cfg) [{:class-b/ref eid}])
-      #_(d/q '[:find ?e ?a ?v :where [?e ?a ?v]] @(d/connect cfg))
-      (dp/pull-many @(d/connect cfg) '[*] [1 2 3 4]))))
