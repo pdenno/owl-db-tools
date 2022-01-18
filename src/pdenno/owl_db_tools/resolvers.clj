@@ -9,11 +9,14 @@
    [pdenno.owl-db-tools.core   :as owl :refer [*conn*]]
    [pdenno.owl-db-tools.util   :as util]))
 
-(def attr-info "ToDo: will probably have to be a function."
+(defn attr-info 
+  "Return a vector of maps containing :attr/id and :attr/type
+   for every attribute in the DB."
+  [conn]
   (d/q '[:find  ?id ?type
          :keys attr/id attr/type
          :where [?e :db/ident ?id] [?e :db/valueType ?type]]
-       *conn*))
+       conn))
 
 (defn attr-types
   "Return map of two sets (with the following two keys):
@@ -52,9 +55,10 @@
 (defn make-resource-attr-resolvers
   "Return a vector of resolvers for rdf resource attributes."
   [conn]
-  (let [attrs (-> (attr-types conn) :resource? vec sort)] ; sort for easier debugging.
+  (let [attrs (-> (attr-types conn) :resource? vec sort) ; sort for easier debugging.
+        attr-types (attr-info conn)]
     (vec (for [att attrs]
-           (let [ref? (= :db.type/ref (some #(when (= (:attr/id %) att) (:attr/type %)) attr-info))]
+           (let [ref? (= :db.type/ref (some #(when (= (:attr/id %) att) (:attr/type %)) attr-types))]
              (make-resolver (symbol (str "rdf-uri-to-" (namespace att) "-" (name att)))
                             {:input [:resource/rdf-uri],
                              :output [att],

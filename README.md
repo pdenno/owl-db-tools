@@ -7,25 +7,26 @@ The library is still young, though its basic features have been tested.
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.pdenno/owl-db-tools.svg)](https://clojars.org/com.github.pdenno/owl-db-tools)
 
-## Usage
+# Usage
 
 There are three steps to getting started:
    1. configuring the database,
    2. specifying the data to store, and
    3. creating the database.
 
-### Configuring the database
+## Configuring the database
 
 There are several persistent DB options described in the [Datahike database configuration docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/datahike-database-configuration).
 The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-db`.
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-		 :keep-history? false
-		 :schema-flexibility :write})
+  		     :keep-history? false
+		     :schema-flexibility :write})
 ```
+There are also examples in the test directory.
 
-### Specifying the data to store
+## Specifying the data to store
 
 Data sources are defined as map entries in nested maps keyed by a prefix (string) that is used as the namespace of a keywords naming each resource associated with the sources URI.
 For example, the following defines two sources;
@@ -44,7 +45,7 @@ In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE
 
 The following keywords are used in the sources:
  * `:uri` the URI of the OWL file to be read,
- * `:access` a pathname to a local copy of the OWL file (for use where it won't be found at the provided URI, for example).
+ * `:access` a pathname to a local copy of the OWL file (for use where the data is local).
  * `:format` the format of the content. This defaults to :rdfxml. Presumably, any format for which JENA is capable will be read, but the only
  two tested are :rdfxml and :turtle.
  * `:ref-only?` this is used suppress reading content but nonethess establish a relationship between a namespace prefix and a URI.
@@ -59,10 +60,11 @@ The following keywords are used in the sources:
  "xml"   {:uri "http://www.w3.org/XML/1998/namespace"       :ref-only? true},
  "xsd"   {:uri "http://www.w3.org/2001/XMLSchema"           :ref-only? true}}
 ```
+Examples of the use of sources can be found in the test directory.
 
-### Creating the Database
+## Creating the Database
 
-With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a call to a connection to the database. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument.
+With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a connection objct to the database; it also sets the dynamic variable `*conn*` in the core namespace to this connection object. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. It can also be acquired directly from Datahike by calling `(datahike.api/connect <db-config-map-as-described-above>)`, which returns an atom containing the connection object.
 
 ```clojure
 (require '[pdenno.owl-db-tools.core :as owl])
@@ -87,10 +89,11 @@ The function create-db! takes the following optional keyword arguments:
 Additional actions on the database are described in the [Datahike readme](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/readme)
 and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api).
 
-## Queries
+# API for queries
 
-For the most part, you would use Datahike's query and pull for APIs to access the data.
-For example, you can retrieve all the classes from the DOLCE namespace in the example in the test directory using a datalog query such as the following:
+The database can be queried directly using Datahike's `query` and `pull` APIs, or using Pathom3 and the 
+Pathom3 resolvers automatically generated for the attributes of the OWL DB read. 
+A typical the Datahike query is depicted below paired with filter to get all the RDF resources defined in the DOLCE namespace of the example database.
 
 ```clojure
 (require '[datahike.api :as d])
@@ -102,20 +105,39 @@ For example, you can retrieve all the classes from the DOLCE namespace in the ex
 (:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
 ```
 
-You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
+## Pathom3-based API
 
-## API
+[Pathom](https://pathom3.wsscode.com/) is a powerful query language similar to GraphQL. 
+With Pathom, you specify the shape of the data you wish to acquire and let its planner do the work of composing a query that provides the data.
+The use of Pathom positions owl-db-tools to be used as a remote client. 
+Pathom's documentation is quite good, so only a simple example is provided here. 
 
-In addition to `create-db` described above, the following are provided as a convenience:
+```clojure
+(in-ns 'pdenno.owl-db-tools.resolvers)
+
+(require '[com.wsscode.pathom3.interface.eql :as p.eql])
+
+(register-resolvers! *conn*) ; Create the basic attribute resolvers for your database. 
+
+(p.eql/process index [{[:resource/rdf-uri :info/mapped-to] [:rdf/type :rdfs/domain :rdfs/subPropertyOf]}])
+
+;;; Returns the following:
+{[:resource/rdf-uri :info/mapped-to] 
+    {:rdf/type :owl/ObjectProperty, 
+	 :rdfs/domain [:dol/particular], 
+	 :rdfs/subPropertyOf :dol/mediated-relation}}
+```
 
 ### `pull-resource`
 
-`pull-resource` takes as arguments a resource-id and a database connection.
-It returns a map of all the triples associated with the resource-id
+`pull-resource` is a convenience function in the resolvers namespace that wraps a Pathom3 resolver. 
+It returns a map of all the triples associated with an RDF resource. 
+It takes two required arguments the resource keyword and the connection object. 
 
+You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
 
 ```clojure
-(owl/pull-resource :dol/perdurant conn)
+(res/pull-resource :dol/perdurant *conn*)
 
 ; Returns
 {:owl/disjointWith [:dol/endurant],
@@ -134,27 +156,33 @@ It returns a map of all the triples associated with the resource-id
 
 ### `resource-ids`
 
-`resource-ids` takes one argument, the database connection and returns a vector of resource IDs (namespaced keyword).
+`resource-ids` (in the core namespace) takes one argument, the database connection and returns a vector of resource IDs (namespaced keyword).
 
 ### `sources`
 
-`sources` takes one required argument, the database connection and returns a map of  information about sources read.
+`sources` (in the core namespace) takes one required argument, the database connection and returns a map of  information about sources read.
 
 An optional boolean keyword argument `:l2s` (meaning 'long to short') can be specified to return a simple map of
 resource URI strings (the map keys) to short-names used as the namespaces of keyword resource IDs.
 
 ### `schema-attributes`
 
-`schema-attributes` takes one required argument, the database connection and returns a map of database attribute specs.
+`schema-attributes` (in the core namespace) takes one required argument, the database connection and returns a map of database attribute specs.
 
 An optional keyword argument `:origin` can be provided with one or more elements from the set `#{:all, :learned, :user}`
 to filter the result to user-specified, learned, or all attributes. The default is `#{:learned :user}`.
 
 ## Database Schema
 
-The schema is described here:
+The initial database schema is as shown below. 
+The data you load may contain attributes beyond those shown. 
+If while reading the data, additional attributes are encountered, the data will be studied and a best guess at the 
+cardinality and type of the data will be made. 
+An attribute spec will be defined accordingly. 
+You can alway query to see what attribute specs were defined. 
+You can use `:user-attrs` on the call to `create-db!` to override the guessing process on an individual attribute basis.
 
-The database is structured as shown.
+
 Details about such schema can be found in the [Datahike schema docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/doc/schema).
 
 ```clojure
