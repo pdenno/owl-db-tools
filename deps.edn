@@ -1,6 +1,7 @@
 {:paths ["src" "resources"]
  :deps {com.taoensso/timbre           {:mvn/version "5.1.2"}
         edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
+        com.wsscode/pathom3           {:mvn/version "2022.01.09-alpha"}
         io.replikativ/datahike        {:mvn/version "0.4.1480"}
         org.clojure/clojure           {:mvn/version "1.10.3"}
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
