@@ -1,6 +1,7 @@
 {:paths ["src" "resources"]
  :deps {com.taoensso/timbre           {:mvn/version "5.1.2"}
         edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
+        com.wsscode/pathom3           {:mvn/version "2022.01.09-alpha"}
         io.replikativ/datahike        {:mvn/version "0.4.1480"}
         org.clojure/clojure           {:mvn/version "1.10.3"}
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
@@ -10,7 +11,7 @@
 
             :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                   :exec-fn hf.depstar/jar
-                  :exec-args {:jar "owl-db-tools-1.0.31.jar"
+                  :exec-args {:jar "owl-db-tools-1.0.33.jar"
                               :sync-pom true
                               :version "1.0.31"
                               :group-id "com.github.pdenno"
@@ -19,10 +20,10 @@
             :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                       :exec-fn deps-deploy.deps-deploy/deploy
                       :exec-args {:installer :local
-                                  :artifact "owl-db-tools-1.0.31.jar"}}
+                                  :artifact "owl-db-tools-1.0.33.jar"}}
 
             :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
                                  :sign-releases? true
-                                 :artifact "owl-db-tools-1.0.31.jar"}}}}
+                                 :artifact "owl-db-tools-1.0.33.jar"}}}}
