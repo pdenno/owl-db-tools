@@ -1,6 +1,6 @@
 # owl-db-tools - a library for reading OWL into a Datahike database
 
-This library uses clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies
+This library uses Clojure-wrapped [Apache Jena](https://jena.apache.org/) to read OWL ontologies
 into a [Datahike](https://datahike.io/) database.
 
 The library is still young, though its basic features have been tested.
@@ -102,7 +102,7 @@ A typical the Datahike query is depicted below paired with filter to get all the
 	 (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
-(:dol/abstract  :dol/abstract-location  :dol/abstract-location-of  :dol/abstract-quality  :dol/abstract-region  :dol/accomplishment  :dol/achievement...)
+(:dol/abstract :dol/abstract-location :dol/abstract-location-of :dol/abstract-quality :dol/abstract-region :dol/accomplishment :dol/achievement...)
 ```
 
 ## Pathom3-based API
@@ -119,13 +119,13 @@ Pathom's documentation is quite good, so only a simple example is provided here.
 
 (register-resolvers! *conn*) ; Create the basic attribute resolvers for your database. 
 
-(p.eql/process index [{[:resource/rdf-uri :info/mapped-to] [:rdf/type :rdfs/domain :rdfs/subPropertyOf]}])
+(p.eql/process index [{[:resource/iri :info/mapped-to] [:rdf/type :rdfs/domain :rdfs/subPropertyOf]}])
 
 ;;; Returns the following:
-{[:resource/rdf-uri :info/mapped-to] 
+{[:resource/iri :info/mapped-to] 
     {:rdf/type :owl/ObjectProperty, 
-	 :rdfs/domain [:dol/particular], 
-	 :rdfs/subPropertyOf :dol/mediated-relation}}
+     :rdfs/domain [:dol/particular], 
+     :rdfs/subPropertyOf :dol/mediated-relation}}
 ```
 
 ### `pull-resource`

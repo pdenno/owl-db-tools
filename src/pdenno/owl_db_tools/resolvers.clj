@@ -44,13 +44,13 @@
    the dp/pull returns wrapped in the output Pathom requires."
   [attr resolve?]
   (if resolve?
-    (fn [_env {:resource/keys [rdf-uri]}]
+    (fn [_env {:resource/keys [iri]}]
       (when *conn*
-         (-> (dp/pull *conn* [attr] [:resource/id rdf-uri])
+         (-> (dp/pull *conn* [attr] [:resource/id iri])
              (util/resolve-obj *conn*))))
-    (fn [_env {:resource/keys [rdf-uri]}]
+    (fn [_env {:resource/keys [iri]}]
       (when *conn*
-        (dp/pull *conn* [attr] [:resource/id rdf-uri])))))
+        (dp/pull *conn* [attr] [:resource/id iri])))))
 
 (defn make-resource-attr-resolvers
   "Return a vector of resolvers for rdf resource attributes."
@@ -59,24 +59,24 @@
         attr-types (attr-info conn)]
     (vec (for [att attrs]
            (let [ref? (= :db.type/ref (some #(when (= (:attr/id %) att) (:attr/type %)) attr-types))]
-             (make-resolver (symbol (str "rdf-uri-to-" (namespace att) "-" (name att)))
-                            {:input [:resource/rdf-uri],
+             (make-resolver (symbol (str "iri-to-" (namespace att) "-" (name att)))
+                            {:input [:resource/iri],
                              :output [att],
                              :fn (attr-fn att ref?)}))))))
 
-(pco/defresolver resource-by-uri [{:resource/keys [rdf-uri]}]
-  {:resource/body (dp/pull *conn* '[*] [:resource/id rdf-uri])})
+(pco/defresolver resource-by-iri [{:resource/keys [iri]}]
+  {:resource/body (dp/pull *conn* '[*] [:resource/id iri])})
 
 (defn pull-resource
   "Return the nicely sorted sorted-map of a resource; it's like pretty printing."
   [resource-id conn & {:keys [keep-db-ids? sort?] :or {sort? true}}]
   (binding [*conn* conn]
-    (cond->   (resource-by-uri {:resource/rdf-uri resource-id})
+    (cond->   (resource-by-iri {:resource/iri resource-id})
         true  :resource/body
         true  (util/resolve-obj *conn* :keep-db-ids? keep-db-ids?)
         sort? identity))) ; ToDo: Sort
 
-(def other-resolvers "a vector of pre-defined resolvers for accessing the OWL DB." [resource-by-uri])
+(def other-resolvers "a vector of pre-defined resolvers for accessing the OWL DB." [resource-by-iri])
 
 (defn register-resolvers!
   "Alter the value of the var index to refer to the automatically-generated
