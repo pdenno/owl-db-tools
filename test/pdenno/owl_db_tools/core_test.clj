@@ -4,6 +4,7 @@
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
+   [datahike.pull-api     :as dp]
    [edu.ucdenver.ccp.kr.jena.kb]
    [pdenno.owl-db-tools.core :as owl]
    [pdenno.owl-db-tools.util :as util]
@@ -57,17 +58,17 @@
 (def medium-atm (atom nil))
 
 (defn make-medium-db [cfg]
-   (when (d/database-exists? cfg) (d/delete-database cfg))
+  (when (d/database-exists? cfg) (d/delete-database cfg))
   (reset! medium-atm (owl/create-db! cfg
                                      {"dol" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"}}
                                      :rebuild? true)))
 
 (defn write-resources-map
-  "Writes a file data/example-dolce.edn used in testing testing.
+  "Writes a file data/example-dolce.edn used in testing.
    It is NOT executed in testing."
   []
   (make-medium-db medium-cfg)
-  (let [sorted-resources (-> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @medium-atm) sort)]
+  (let [sorted-resources (-> (d/q '[:find [?v ...] :where [_ :resource/iri ?v]] @medium-atm) sort)]
     (->> (with-out-str
            (println "{")
            (doseq [obj sorted-resources]

@@ -1,44 +1,48 @@
 {
 
+
  :$source/http:%%www.daml.org%2001%03%daml+oil
-{:resource/id :$source/http:%%www.daml.org%2001%03%daml+oil,
+{:resource/iri :$source/http:%%www.daml.org%2001%03%daml+oil,
  :source/long-name "http://www.daml.org/2001/03/daml+oil",
  :source/short-name "daml"}
 
 
  :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl
-{:owl/versionInfo "classified",
- :rdf/type :owl/Ontology,
- :rdfs/comment
- ["The DOLCE and DnS ontologies. OWL engineering by Aldo Gangemi."],
- :resource/id
- :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl,
+{:rdf/type :owl/Ontology,
  :source/loaded? true,
+ :resource/iri
+ :$source/http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl,
+ :owl/versionInfo "classified",
+ :resource/namespace "$source",
+ :source/short-name "dol",
  :source/long-name
  "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl",
- :source/short-name "dol"}
+ :rdfs/comment
+ ["The DOLCE and DnS ontologies. OWL engineering by Aldo Gangemi."],
+ :resource/name
+ "http:%%www.ontologydesignpatterns.org%ont%dlp%DOLCE-Lite.owl"}
 
 
  :$source/http:%%www.w3.org%1999%02%22-rdf-syntax-ns
-{:resource/id :$source/http:%%www.w3.org%1999%02%22-rdf-syntax-ns,
+{:resource/iri :$source/http:%%www.w3.org%1999%02%22-rdf-syntax-ns,
  :source/long-name "http://www.w3.org/1999/02/22-rdf-syntax-ns",
  :source/short-name "rdf"}
 
 
  :$source/http:%%www.w3.org%2000%01%rdf-schema
-{:resource/id :$source/http:%%www.w3.org%2000%01%rdf-schema,
+{:resource/iri :$source/http:%%www.w3.org%2000%01%rdf-schema,
  :source/long-name "http://www.w3.org/2000/01/rdf-schema",
  :source/short-name "rdfs"}
 
 
  :$source/http:%%www.w3.org%2001%XMLSchema
-{:resource/id :$source/http:%%www.w3.org%2001%XMLSchema,
+{:resource/iri :$source/http:%%www.w3.org%2001%XMLSchema,
  :source/long-name "http://www.w3.org/2001/XMLSchema",
  :source/short-name "xsd"}
 
 
  :$source/http:%%www.w3.org%2002%07%owl
-{:resource/id :$source/http:%%www.w3.org%2002%07%owl,
+{:resource/iri :$source/http:%%www.w3.org%2002%07%owl,
  :source/long-name "http://www.w3.org/2002/07/owl",
  :source/short-name "owl"}
 
@@ -59,27 +63,33 @@
    [{:owl/complementOf :dol/spatial-location_q, :rdf/type :owl/Class}],
    :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/abstract}
+ :resource/iri :dol/abstract,
+ :resource/name "abstract",
+ :resource/namespace "dol"}
 
 
  :dol/abstract-location
-{:owl/inverseOf :dol/abstract-location-of,
+{:rdfs/domain [:dol/non-physical-endurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/abstract-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/generic-location,
  :rdfs/comment
  ["Analytical location holding between non-physical endurants and abstract regions."],
- :rdfs/domain [:dol/non-physical-endurant],
- :rdfs/range [:dol/abstract-region],
- :rdfs/subPropertyOf :dol/generic-location,
- :resource/id :dol/abstract-location}
+ :owl/inverseOf :dol/abstract-location-of,
+ :resource/name "abstract-location",
+ :rdfs/range [:dol/abstract-region]}
 
 
  :dol/abstract-location-of
-{:owl/inverseOf :dol/abstract-location,
+{:rdfs/domain [:dol/abstract-region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/abstract-region],
- :rdfs/range [:dol/non-physical-endurant],
+ :resource/iri :dol/abstract-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/abstract-location-of}
+ :owl/inverseOf :dol/abstract-location,
+ :resource/name "abstract-location-of",
+ :rdfs/range [:dol/non-physical-endurant]}
 
 
  :dol/abstract-quality
@@ -97,7 +107,9 @@
   {:owl/allValuesFrom [:dol/abstract-quality],
    :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/abstract-quality}
+ :resource/iri :dol/abstract-quality,
+ :resource/name "abstract-quality",
+ :resource/namespace "dol"}
 
 
  :dol/abstract-region
@@ -113,7 +125,9 @@
   {:owl/allValuesFrom [:dol/abstract-quality],
    :owl/onProperty :dol/q-location-of,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/abstract-region}
+ :resource/iri :dol/abstract-region,
+ :resource/name "abstract-region",
+ :resource/namespace "dol"}
 
 
  :dol/accomplishment
@@ -121,7 +135,9 @@
  :rdfs/comment
  ["Eventive occurrences (events) are called achievements if they are atomic, otherwise they are accomplishments.Further developments: being 'achievement', 'accomplishment', 'state', 'event', etc. can be also considered 'aspects' of processes or of parts of them. For example, the same process 'rock erosion in the Sinni valley' can be seen as an accomplishment (what has brought the current state that e.g. we are trying to explain), as an achievement (the erosion process as the result of a previous accomplishment), as a state (collapsing the time interval of the erosion into a time point), as an event (what has changed our focus from a state to another).In the erosion case, we could have good motivations to shift from one aspect to another: a) causation focus, b) effectual focus, c) condensation d) transition (causality)."],
  :rdfs/subClassOf [:dol/event],
- :resource/id :dol/accomplishment}
+ :resource/iri :dol/accomplishment,
+ :resource/name "accomplishment",
+ :resource/namespace "dol"}
 
 
  :dol/achievement
@@ -129,7 +145,9 @@
  :rdfs/comment
  ["Eventive occurrences (events) are called achievements  if they are atomic, otherwise they are accomplishments.Further developments: being 'achievement', 'accomplishment', 'state', 'event', etc. can be also considered 'aspects' of processes or of parts of them. For example, the same process 'rock erosion in the Sinni valley' can be seen as an accomplishment (what has brought the current state that e.g. we are trying to explain), as an achievement (the erosion process as the result of a previous accomplishment), as a state (collapsing the time interval of the erosion into a time point), as an event (what has changed our focus from a state to another).In the erosion case, we could have good motivations to shift from one aspect to another: a) causation focus, b) effectual focus, c) condensation d) transition (causality)."],
  :rdfs/subClassOf [:dol/event],
- :resource/id :dol/achievement}
+ :resource/iri :dol/achievement,
+ :resource/name "achievement",
+ :resource/namespace "dol"}
 
 
  :dol/amount-of-matter
@@ -138,7 +156,9 @@
  :rdfs/comment
  ["The common trait of amounts of matter is that they are endurants with no unity (according to Gangemi et a. 2001 none of them is an essential  whole). Amounts of matter - 'stuffs' referred to by mass nouns like 'gold', 'iron', 'wood',  'sand', 'meat', etc. - are mereologically  invariant, in the sense that they change their  identity when they change some parts."],
  :rdfs/subClassOf [:dol/physical-endurant],
- :resource/id :dol/amount-of-matter}
+ :resource/iri :dol/amount-of-matter,
+ :resource/name "amount-of-matter",
+ :resource/namespace "dol"}
 
 
  :dol/arbitrary-sum
@@ -151,66 +171,80 @@
   {:owl/onProperty :dol/part,
    :owl/someValuesFrom [:dol/endurant],
    :rdf/type :owl/Restriction}],
- :resource/id :dol/arbitrary-sum}
+ :resource/iri :dol/arbitrary-sum,
+ :resource/name "arbitrary-sum",
+ :resource/namespace "dol"}
 
 
  :dol/atomic-part
-{:owl/inverseOf :dol/atomic-part-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["The part relation between a particular and an atom."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/atomic-part,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/atomic-part}
+ :rdfs/comment ["The part relation between a particular and an atom."],
+ :owl/inverseOf :dol/atomic-part-of,
+ :resource/name "atomic-part",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/atomic-part-of
-{:owl/inverseOf :dol/atomic-part,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/atomic-part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/atomic-part-of}
+ :owl/inverseOf :dol/atomic-part,
+ :resource/name "atomic-part-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/boundary
-{:owl/inverseOf :dol/boundary-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/boundary,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/part,
- :resource/id :dol/boundary}
+ :owl/inverseOf :dol/boundary-of,
+ :resource/name "boundary",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/boundary-of
-{:owl/inverseOf :dol/boundary,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/boundary-of,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["A boundary here is taken to be a part (mereological treatment). Consequently, in the case of endurants, (reified) boundaries are features."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/boundary-of}
+ :owl/inverseOf :dol/boundary,
+ :resource/name "boundary-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/constant-participant
-{:owl/inverseOf :dol/constant-participant-in,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/constant-participant,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["Anytime x is present, x has participant y. In other words, all parts of x have a same participant.Participation can be constant (in all parts of the perdurant, e.g. in 'the car is running'), or temporary (in only some parts, e.g. in 'I'm electing the president')."],
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/constant-participant}
+ :owl/inverseOf :dol/constant-participant-in,
+ :resource/name "constant-participant",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/constant-participant-in
-{:owl/inverseOf :dol/constant-participant,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
+ :resource/iri :dol/constant-participant-in,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/constant-participant-in}
+ :owl/inverseOf :dol/constant-participant,
+ :resource/name "constant-participant-in",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/dependent-place
@@ -218,7 +252,9 @@
  :rdfs/comment
  ["A feature that is not part of its host, like a hole in a piece of cheese, the underneath of a table, the front of a house, or the shadow of a tree."],
  :rdfs/subClassOf [:dol/feature],
- :resource/id :dol/dependent-place}
+ :resource/iri :dol/dependent-place,
+ :resource/name "dependent-place",
+ :resource/namespace "dol"}
 
 
  :dol/endurant
@@ -237,7 +273,9 @@
   {:owl/allValuesFrom [:dol/endurant],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/endurant}
+ :resource/iri :dol/endurant,
+ :resource/name "endurant",
+ :resource/namespace "dol"}
 
 
  :dol/event
@@ -245,27 +283,33 @@
  :rdfs/comment
  ["An occurrence-type is stative or eventive according  to whether it holds of the mereological sum of two of its instances, i.e. if it is cumulative or not. A sitting occurrence is stative since the sum of two sittings is still a sitting occurrence.In general, events differ from situations because they are not assumed to have a description from which they depend. They can be sequenced by some course, but they do not require a description as a unifying criterion.On the other hand, at any time, one can conceive a description that asserts the constraints by which an event of a certian type is such, and in this case, it becomes a situation.Since the decision of designing an explicit description that unifies a perdurant depends on context, task, interest, application, etc., when aligning an ontology do DLP, there can be indecision on where to align an event-oriented class. For example, in the WordNet alignment, we have decided to put only some physical events under 'event', e.g. 'discharge', in order to stress the social orientedness of DLP. But whereas we need to talk explicitly of the criteria by which we conceive discharge events, these will be put under 'situation'.Similar considerations are made for the other types of perdurants in DOLCE.A different notion of event (dealing with change) is currently investigated for further developments: being 'achievement', 'accomplishment', 'state', 'event', etc. can be also considered 'aspects' of processes or of parts of them. For example, the same process 'rock erosion in the Sinni valley' can be conceptualized as an accomplishment (what has brought the current state that e.g. we are trying to explain), as an achievement (the erosion process as the result of a previous accomplishment), as a state (if we collapse the time interval of the erosion into a time point), or as an event (what has changed our focus from a state to another).In the erosion case, we could have good motivations to shift from one aspect to another: a) causation focus, b) effectual focus, c) condensation d) transition (causality).If we want to consider all the aspects of a process together, we need to postulate a unifying descriptive set of criteria (i.e. a 'description'), according to which that process is circumstantiated in a 'situation'. The different aspects will arise as a parts of a same situation."],
  :rdfs/subClassOf [:dol/perdurant],
- :resource/id :dol/event}
+ :resource/iri :dol/event,
+ :resource/name "event",
+ :resource/namespace "dol"}
 
 
  :dol/exact-location
-{:owl/inverseOf :dol/exact-location-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/exact-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/mediated-relation,
  :rdfs/comment
  ["A location relation bounded to regions and defined analytically through the composition of inherence and q-location. This is the analytical version of 'generic location'."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/region],
- :rdfs/subPropertyOf :dol/mediated-relation,
- :resource/id :dol/exact-location}
+ :owl/inverseOf :dol/exact-location-of,
+ :resource/name "exact-location",
+ :rdfs/range [:dol/region]}
 
 
  :dol/exact-location-of
-{:owl/inverseOf :dol/exact-location,
+{:rdfs/domain [:dol/region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/region],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/exact-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/exact-location-of}
+ :owl/inverseOf :dol/exact-location,
+ :resource/name "exact-location-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/feature
@@ -278,218 +322,262 @@
   {:owl/onProperty :dol/host,
    :owl/someValuesFrom [:dol/physical-endurant],
    :rdf/type :owl/Restriction}],
- :resource/id :dol/feature}
+ :resource/iri :dol/feature,
+ :resource/name "feature",
+ :resource/namespace "dol"}
 
 
  :dol/generic-constituent
-{:owl/inverseOf :dol/generic-constituent-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/generic-constituent,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["'Constituent' should depend on some layering of  the ontology. For example, scientific granularities or ontological 'strata' are  typical layerings. A constituent is a part belonging to a lower layer. Since layering is actually a partition of the ontology, constituents are not properly classified as parts, although this kinship can be intuitive for common sense. Example of specific constant constituents are the entities constituting a setting (a situation), whilethe entities constituting a collection are examples of generic constant constituents."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/generic-constituent}
+ :owl/inverseOf :dol/generic-constituent-of,
+ :resource/name "generic-constituent",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/generic-constituent-of
-{:owl/inverseOf :dol/generic-constituent,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/generic-constituent-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/generic-constituent-of}
+ :owl/inverseOf :dol/generic-constituent,
+ :resource/name "generic-constituent-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/generic-dependent
-{:owl/inverseOf :dol/generically-dependent-on,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/generic-dependent,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The dependence on an individual of a given type at some time. This is traditionally a relation between particulars and universals, but this one states that x generically depends on y if a z different from y, but with the same properties, can be equivalently its depend-on.This is a temporally-indexed relation (embedded in this syntax)."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/generic-dependent}
+ :owl/inverseOf :dol/generically-dependent-on,
+ :resource/name "generic-dependent",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/generic-location
-{:owl/inverseOf :dol/generic-location-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/generic-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/mediated-relation,
  :rdfs/comment
  ["The most generic location relation, probably equivalent to more than one image schema in a cognitive system (e.g. containment for exact location, proximity for approximate location).This is meant to reason on generalized, common sense as well as formal locations, including naive localization, between any kinds of entities. Generic location is branched into 'exact' location, ranging on regions, and 'approximate' (naive) location, ranging on non-regions."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/mediated-relation,
- :resource/id :dol/generic-location}
+ :owl/inverseOf :dol/generic-location-of,
+ :resource/name "generic-location",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/generic-location-of
-{:owl/inverseOf :dol/generic-location,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/generic-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/generic-location-of}
+ :owl/inverseOf :dol/generic-location,
+ :resource/name "generic-location-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/generically-dependent-on
-{:owl/inverseOf :dol/generic-dependent,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/generically-dependent-on,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/generically-dependent-on}
+ :owl/inverseOf :dol/generic-dependent,
+ :resource/name "generically-dependent-on",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/has-quale
-{:owl/inverseOf :dol/quale-of,
+{:rdfs/domain [:dol/quality],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["A quality having a q-location at an atomic region."],
- :rdfs/domain [:dol/quality],
- :rdfs/range [:dol/quale],
+ :resource/iri :dol/has-quale,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/has-quale}
+ :rdfs/comment ["A quality having a q-location at an atomic region."],
+ :owl/inverseOf :dol/quale-of,
+ :resource/name "has-quale",
+ :rdfs/range [:dol/quale]}
 
 
  :dol/has-quality
-{:owl/inverseOf :dol/inherent-in,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/quality],
+ :resource/iri :dol/has-quality,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/has-quality}
+ :owl/inverseOf :dol/inherent-in,
+ :resource/name "has-quality",
+ :rdfs/range [:dol/quality]}
 
 
  :dol/has-t-quality
-{:owl/inverseOf :dol/t-inherent-in,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/quality],
+ :resource/iri :dol/has-t-quality,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/has-t-quality}
+ :owl/inverseOf :dol/t-inherent-in,
+ :resource/name "has-t-quality",
+ :rdfs/range [:dol/quality]}
 
 
  :dol/host
-{:owl/inverseOf :dol/host-of,
+{:rdfs/domain [:dol/feature],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/host,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["The immediate relation holding for features and entities."],
- :rdfs/domain [:dol/feature],
- :rdfs/range [:dol/physical-endurant],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/host}
+ :owl/inverseOf :dol/host-of,
+ :resource/name "host",
+ :rdfs/range [:dol/physical-endurant]}
 
 
  :dol/host-of
-{:owl/inverseOf :dol/host,
+{:rdfs/domain [:dol/physical-endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/physical-endurant],
- :rdfs/range [:dol/feature],
+ :resource/iri :dol/host-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/host-of}
+ :owl/inverseOf :dol/host,
+ :resource/name "host-of",
+ :rdfs/range [:dol/feature]}
 
 
  :dol/identity-c
-{:owl/inverseOf :dol/identity-c,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/identity-c,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["Any pair of individuals are ontologically identical if they are identical to themselves. Reflexive, symmetric, and transitive."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/identity-c}
+ :owl/inverseOf :dol/identity-c,
+ :resource/name "identity-c",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/identity-n
-{:owl/inverseOf :dol/identity-n,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/identity-n,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["Any pair of individuals are notionally identical iff they instantiate all and only the same concepts."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/identity-n}
+ :owl/inverseOf :dol/identity-n,
+ :resource/name "identity-n",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/immediate-relation
-{:owl/inverseOf :dol/immediate-relation-i,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/immediate-relation,
+ :resource/namespace "dol",
  :rdfs/comment
  ["A relation that holds without  additional mediating individuals. In logical terms, a non-composed relation."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :resource/id :dol/immediate-relation}
+ :owl/inverseOf :dol/immediate-relation-i,
+ :resource/name "immediate-relation",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/immediate-relation-i
-{:owl/inverseOf :dol/immediate-relation,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/immediate-relation-i,
+ :resource/namespace "dol",
  :rdfs/comment
  ["A relation that holds without additional mediating individuals. In logical terms, a non-composed relation."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :resource/id :dol/immediate-relation-i}
+ :owl/inverseOf :dol/immediate-relation,
+ :resource/name "immediate-relation-i",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/inherent-in
-{:owl/inverseOf :dol/has-quality,
+{:rdfs/domain [:dol/quality],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/inherent-in,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The immediate relation holding for qualities and entities."],
- :rdfs/domain [:dol/quality],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/inherent-in}
+ :owl/inverseOf :dol/has-quality,
+ :resource/name "inherent-in",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/life
-{:owl/inverseOf :dol/life-of,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/life,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["Total constant participation applied to the mereological sum of the perdurants in which an endurant participates."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/life}
+ :owl/inverseOf :dol/life-of,
+ :resource/name "life",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/life-of
-{:owl/inverseOf :dol/life,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/life-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/participant,
- :resource/id :dol/life-of}
+ :owl/inverseOf :dol/life,
+ :resource/name "life-of",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/mediated-relation
-{:owl/inverseOf :dol/mediated-relation-i,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/mediated-relation,
+ :resource/namespace "dol",
  :rdfs/comment
  ["A relation that composes other  relations. For example, a participation relation composed with a representation relation.Composed relation cannot be directly expressed in OWL-DL, then (at least some) compositions are expressed as class or restriction axioms."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :resource/id :dol/mediated-relation}
+ :owl/inverseOf :dol/mediated-relation-i,
+ :resource/name "mediated-relation",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/mediated-relation-i
-{:owl/inverseOf :dol/mediated-relation,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/mediated-relation-i,
+ :resource/namespace "dol",
  :rdfs/comment
  ["A relation that composes other relations. For example, a participation relation composed with a representation relation. Composed relation cannot be directly expressed in OWL-DL, then (at least some) compositions are expressed as class or restriction axioms."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :resource/id :dol/mediated-relation-i}
+ :owl/inverseOf :dol/mediated-relation,
+ :resource/name "mediated-relation-i",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/mereologically-coincides
-{:owl/inverseOf :dol/mereologically-coincides,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["Having the same parts at time t."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/mereologically-coincides,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/temporary-part,
- :resource/id :dol/mereologically-coincides}
+ :rdfs/comment ["Having the same parts at time t."],
+ :owl/inverseOf :dol/mereologically-coincides,
+ :resource/name "mereologically-coincides",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/non-physical-endurant
@@ -505,7 +593,9 @@
   {:owl/allValuesFrom [:dol/abstract-quality],
    :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/non-physical-endurant}
+ :resource/iri :dol/non-physical-endurant,
+ :resource/name "non-physical-endurant",
+ :resource/namespace "dol"}
 
 
  :dol/non-physical-object
@@ -520,75 +610,91 @@
   {:owl/onProperty :dol/generically-dependent-on,
    :owl/someValuesFrom [:dol/physical-endurant],
    :rdf/type :owl/Restriction}],
- :resource/id :dol/non-physical-object}
+ :resource/iri :dol/non-physical-object,
+ :resource/name "non-physical-object",
+ :resource/namespace "dol"}
 
 
  :dol/overlaps
-{:owl/inverseOf :dol/overlaps,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["Mereological overlap: having a common part."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/overlaps,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/overlaps}
+ :rdfs/comment ["Mereological overlap: having a common part."],
+ :owl/inverseOf :dol/overlaps,
+ :resource/name "overlaps",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/part
-{:owl/inverseOf :dol/part-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/part,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The most generic part relation, reflexive, asymmetric, and transitive."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/part}
+ :owl/inverseOf :dol/part-of,
+ :resource/name "part",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/part-of
-{:owl/inverseOf :dol/part,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/part-of}
+ :owl/inverseOf :dol/part,
+ :resource/name "part-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/participant
-{:owl/inverseOf :dol/participant-in,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/participant,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The immediate relation holding between endurants and perdurants (e.g. in 'the car is running').Participation can be constant (in all parts of the perdurant, e.g. in 'the car is running'), or temporary (in only some parts, e.g. in 'I'm electing the president').A 'functional' participant is specialized for those forms of participation that depend on the nature of participants, processes, or on the intentionality of agentive participants. Traditional 'thematic role' should be mapped to functional participation.For relations holding between participants in a same perdurant, see the co-participates relation."],
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/participant}
+ :owl/inverseOf :dol/participant-in,
+ :resource/name "participant",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/participant-in
-{:owl/inverseOf :dol/participant,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
+ :resource/iri :dol/participant-in,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/participant-in}
+ :owl/inverseOf :dol/participant,
+ :resource/name "participant-in",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/particular
 {:rdf/type :owl/Class,
  :rdfs/comment
  ["AKA 'entity'.Any individual in the DOLCE domain of discourse. The extensional coverage of DOLCE is as large as possible, since it ranges on 'possibilia', i.e all possible individuals that can be postulated by means of DOLCE axioms. Possibilia include physical objects, substances, processes, qualities,  conceptual regions, non-physical objects, collections and even arbitrary sums of objects.The class 'particular' features a covering partition that includes: endurant, perdurant, quality, and abstract. There are also some subclasses defined as unions of subclasses of 'particular' for special purposes: spatio-temporal-particular (any particular except abstracts)- physical-realization (any realization of an information object, defined in the ExtendedDnS ontology)."],
- :resource/id :dol/particular}
+ :resource/iri :dol/particular,
+ :resource/name "particular",
+ :resource/namespace "dol"}
 
 
  :dol/partly-compresent
-{:owl/inverseOf :dol/partly-compresent,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/partly-compresent,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/mediated-relation-i,
  :rdfs/comment
  ["A composed (mediated) relation used here to make relations 'temporary': by adding it as a superrelation, the effect is that the two related endurants cannot be present at all the same time intervals, but are compresent at least at some time interval (see related axiom).In FOL, the same constraint can be stated directly by coreference.This workaround can be used to index time of relations that involve reciprocal dependency, but it cannot be used in general with relations involving multiple strata of reality. For example, _about_ relation can be temporally indexed, without involving that the time of the information object overlaps with the time of the entity the information is about (but this works for e.g. the _realizes_ relation between information objects and entities whatsoever). The different temporal constraints of about vs. expresses probably derive from the dependency of aboutness from conception (to be about x, an information object should also express a description d that is satisfied by a situation including x, then temporal overlapping of _about_ is true in virtue of d). On the other hand, even conceives cannot be indexed in this way, because overlapping does not hold between the time og the conceiving agent, and the conceived description (or situation)."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/partly-compresent}
+ :owl/inverseOf :dol/partly-compresent,
+ :resource/name "partly-compresent",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/perdurant
@@ -598,22 +704,24 @@
  ["Perdurants (AKA occurrences) comprise what are variously called events, processes, phenomena, activities and states. They can have temporal parts or spatial parts. For instance, the first movement of (an execution of) a symphony is a temporal part of the symphony. On the other hand, the play performed by the left side of the orchestra is a spatial part. In both cases, these parts are occurrences themselves. We assume that objects cannot be parts of occurrences, but rather they participate in them. Perdurants extend in time by accumulating different temporal parts, so that, at any time they are present, they are only partially present, in  the sense that some of their proper temporal parts (e.g., their previous or future phases) may be not present. E.g., the piece of paper you are reading now is wholly present, while some temporal parts of your reading are not present yet, or any more. Philosophers say that endurants are entities that are in time, while lacking temporal parts (so to speak, all their parts flow with them in time). Perdurants, on the contrary, are entities that happen in time, and can have temporal parts (all their parts are fixed in time)."],
  :rdfs/subClassOf
  [:dol/spatio-temporal-particular
-  {:owl/allValuesFrom [:dol/perdurant],
-   :owl/onProperty :dol/specific-constant-constituent,
-   :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/participant,
    :owl/someValuesFrom [:dol/endurant],
+   :rdf/type :owl/Restriction}
+  {:owl/onProperty :dol/has-quality,
+   :owl/someValuesFrom [:dol/temporal-location_q],
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/perdurant],
+   :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/perdurant],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/temporal-quality],
    :owl/onProperty :dol/has-quality,
-   :rdf/type :owl/Restriction}
-  {:owl/onProperty :dol/has-quality,
-   :owl/someValuesFrom [:dol/temporal-location_q],
    :rdf/type :owl/Restriction}],
- :resource/id :dol/perdurant}
+ :resource/iri :dol/perdurant,
+ :resource/name "perdurant",
+ :resource/namespace "dol"}
 
 
  :dol/physical-endurant
@@ -626,39 +734,45 @@
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/spatial-location_q],
    :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/physical-endurant],
-   :owl/onProperty :dol/part,
-   :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality,
    :owl/someValuesFrom [:dol/physical-quality],
+   :rdf/type :owl/Restriction}
+  {:owl/allValuesFrom [:dol/physical-endurant],
+   :owl/onProperty :dol/specific-constant-constituent,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-quality],
    :owl/onProperty :dol/has-quality,
    :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/physical-endurant],
-   :owl/onProperty :dol/specific-constant-constituent,
+   :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/physical-endurant}
+ :resource/iri :dol/physical-endurant,
+ :resource/name "physical-endurant",
+ :resource/namespace "dol"}
 
 
  :dol/physical-location
-{:owl/inverseOf :dol/physical-location-of,
+{:rdfs/domain [:dol/physical-endurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/physical-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/generic-location,
  :rdfs/comment
  ["Analytical location holding between physical endurants and physical regions."],
- :rdfs/domain [:dol/physical-endurant],
- :rdfs/range [:dol/physical-region],
- :rdfs/subPropertyOf :dol/generic-location,
- :resource/id :dol/physical-location}
+ :owl/inverseOf :dol/physical-location-of,
+ :resource/name "physical-location",
+ :rdfs/range [:dol/physical-region]}
 
 
  :dol/physical-location-of
-{:owl/inverseOf :dol/physical-location,
+{:rdfs/domain [:dol/physical-region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/physical-region],
- :rdfs/range [:dol/physical-endurant],
+ :resource/iri :dol/physical-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/physical-location-of}
+ :owl/inverseOf :dol/physical-location,
+ :resource/name "physical-location-of",
+ :rdfs/range [:dol/physical-endurant]}
 
 
  :dol/physical-object
@@ -667,7 +781,9 @@
  :rdfs/comment
  ["The main characteristic of physical objects is that  they are endurants with unity. However, they have no common unity criterion, since  different subtypes of objects may  have different unity criteria. Differently from  aggregates, (most) physical objects change some of their parts while keeping their  identity, they can have therefore temporary parts. Often physical objects (indeed,  all endurants) are ontologically independent from occurrences (discussed below).  However, if we admit that every object has a life, it is hard to exclude a mutual  specific constant dependence between the two. Nevertheless, we may still use the  notion of dependence to (weakly) characterize objects as being not specifically  constantly dependent on other objects."],
  :rdfs/subClassOf [:dol/physical-endurant],
- :resource/id :dol/physical-object}
+ :resource/iri :dol/physical-object,
+ :resource/name "physical-object",
+ :resource/namespace "dol"}
 
 
  :dol/physical-quality
@@ -685,7 +801,9 @@
   {:owl/allValuesFrom [:dol/physical-region],
    :owl/onProperty :dol/q-location,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/physical-quality}
+ :resource/iri :dol/physical-quality,
+ :resource/name "physical-quality",
+ :resource/namespace "dol"}
 
 
  :dol/physical-region
@@ -701,7 +819,9 @@
   {:owl/allValuesFrom [:dol/physical-quality],
    :owl/onProperty :dol/q-location-of,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/physical-region}
+ :resource/iri :dol/physical-region,
+ :resource/name "physical-region",
+ :resource/namespace "dol"}
 
 
  :dol/process
@@ -709,27 +829,33 @@
  :rdfs/comment
  ["Within stative occurrences, we distinguish between states and processes     according to homeomericity: sitting is classified as a state but running     is classified as a process, since there are (very short) temporal parts of     a running that are not themselves runnings. In general, processes differ     from situations because they are not assumed to have a description from     which they depend. They can be sequenced by some course, but they do not     require a description as a unifying criterion. On the other hand, at any     time, one can conceive a description that asserts the constraints by which     a process of a certian type is such, and in this case, it becomes a     situation. Since the decision of designing an explicit description that     unifies a perdurant depends on context, task, interest, application, etc.,     when aligning an ontology do DLP, there can be indecision on where to     align a process-oriented class. For example, in the WordNet alignment, we     have decided to put only some physical processes under 'process', e.g.     'organic process', in order to stress the social orientedness of DLP. But     whereas we need to talk explicitly of the criteria by which we conceive     organic processes, these will be put under 'situation'. Similar     considerations are made for the other types of perdurants in DOLCE. A     different notion of event (dealing with change) is currently investigated     for further developments: being 'achievement', 'accomplishment', 'state',     'event', etc. can be also considered 'aspects' of processes or of parts of     them. For example, the same process 'rock erosion in the Sinni valley' can     be conceptualized as an accomplishment (what has brought the current state     that e.g. we are trying to explain), as an achievement (the erosion     process as the result of a previous accomplishment), as a state (if we     collapse the time interval of the erosion into a time point), or as an     event (what has changed our focus from a state to another). In the erosion     case, we could have good motivations to shift from one aspect to another:     a) causation focus, b) effectual focus, c) condensation d) transition     (causality). If we want to consider all the aspects of a process together,     we need to postulate a unifying descriptive set of criteria (i.e. a     'description'), according to which that process is circumstantiated in a     'situation'. The different aspects will arise as a parts of a same situation."],
  :rdfs/subClassOf [:dol/stative],
- :resource/id :dol/process}
+ :resource/iri :dol/process,
+ :resource/name "process",
+ :resource/namespace "dol"}
 
 
  :dol/proper-part
-{:owl/inverseOf :dol/proper-part-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/proper-part,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The proper part relation: irreflexive, antisymmetric, and transitive."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/proper-part}
+ :owl/inverseOf :dol/proper-part-of,
+ :resource/name "proper-part",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/proper-part-of
-{:owl/inverseOf :dol/proper-part,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/proper-part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/proper-part-of}
+ :owl/inverseOf :dol/proper-part,
+ :resource/name "proper-part-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/proposition
@@ -737,38 +863,46 @@
  :rdfs/comment
  ["The abstract content of a proposition. Abstract content is purely combinatorial: from this viewpoint, any content that can be generated by means of combinatorial rules is assumed to exist in the domain of quantification (reified abstracts)."],
  :rdfs/subClassOf [:dol/abstract],
- :resource/id :dol/proposition}
+ :resource/iri :dol/proposition,
+ :resource/name "proposition",
+ :resource/namespace "dol"}
 
 
  :dol/q-location
-{:owl/inverseOf :dol/q-location-of,
+{:rdfs/domain [:dol/quality],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/q-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The immediate relation holding for qualities and regions. See 'generic location' branching for the various mediated relations that embed q-location."],
- :rdfs/domain [:dol/quality],
- :rdfs/range [:dol/region],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/q-location}
+ :owl/inverseOf :dol/q-location-of,
+ :resource/name "q-location",
+ :rdfs/range [:dol/region]}
 
 
  :dol/q-location-of
-{:owl/inverseOf :dol/q-location,
+{:rdfs/domain [:dol/region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/region],
- :rdfs/range [:dol/quality],
+ :resource/iri :dol/q-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/q-location-of}
+ :owl/inverseOf :dol/q-location,
+ :resource/name "q-location-of",
+ :rdfs/range [:dol/quality]}
 
 
  :dol/q-present-at
-{:owl/inverseOf :dol/time-of-q-presence-of,
+{:rdfs/domain [:dol/physical-quality],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/q-present-at,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/mediated-relation,
  :rdfs/comment
  ["Presence of a physical quality when inheres in  an endurant."],
- :rdfs/domain [:dol/physical-quality],
- :rdfs/range [:dol/time-interval],
- :rdfs/subPropertyOf :dol/mediated-relation,
- :resource/id :dol/q-present-at}
+ :owl/inverseOf :dol/time-of-q-presence-of,
+ :resource/name "q-present-at",
+ :rdfs/range [:dol/time-interval]}
 
 
  :dol/quale
@@ -782,16 +916,20 @@
  :rdf/type :owl/Class,
  :rdfs/comment ["An atomic region."],
  :rdfs/subClassOf [:dol/region],
- :resource/id :dol/quale}
+ :resource/iri :dol/quale,
+ :resource/name "quale",
+ :resource/namespace "dol"}
 
 
  :dol/quale-of
-{:owl/inverseOf :dol/has-quale,
+{:rdfs/domain [:dol/quale],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/quale],
- :rdfs/range [:dol/quality],
+ :resource/iri :dol/quale-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/quale-of}
+ :owl/inverseOf :dol/has-quale,
+ :resource/name "quale-of",
+ :rdfs/range [:dol/quality]}
 
 
  :dol/quality
@@ -804,7 +942,9 @@
   {:owl/onProperty :dol/inherent-in,
    :owl/someValuesFrom [:dol/particular],
    :rdf/type :owl/Restriction}],
- :resource/id :dol/quality}
+ :resource/iri :dol/quality,
+ :resource/name "quality",
+ :resource/namespace "dol"}
 
 
  :dol/quality-space
@@ -820,27 +960,33 @@
  :rdfs/comment
  ["A quality space is a topologically maximal region. The constraint of maximality cannot be given completely in OWL, but a constraint is given that creates a partition out of all quality spaces (e.g. no two quality spaces can overlap mereologically)."],
  :rdfs/subClassOf [:dol/region],
- :resource/id :dol/quality-space}
+ :resource/iri :dol/quality-space,
+ :resource/name "quality-space",
+ :resource/namespace "dol"}
 
 
  :dol/r-location
-{:owl/inverseOf :dol/r-location-of,
+{:rdfs/domain [:dol/region],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/r-location,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["A relation for representing regions within other regions, e.g. in measurement spaces (space composition).The result of r-location composition is a new 'composed region', which can either preserve the same region type (e.g. physical+physical->physical, or  physical+abstract->physical), or not (e.g. physical+abstract->abstract). See 'composition description' for more details.In some cases, space composition is conventional, i.e. a space is just 'located' at another space, as in the case of measurement spaces:(direct composition):   r r-location r1In other cases, r-location implies a complex path, e.g. :(homogeneous composition):   r q-location-of q inherent-in x has-quality q1 q-location r1(heterogeneous composition across endurants and perdurants):   r q-location-of q inherent-in e participant-in p has-quality q1 q-location r1(heterogeneous composition across physical and non-physical endurants):   r q-location-of q inherent-in pe specific-constant-dependent npe has-quality q1 q-location r1"],
- :rdfs/domain [:dol/region],
- :rdfs/range [:dol/region],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/r-location}
+ :owl/inverseOf :dol/r-location-of,
+ :resource/name "r-location",
+ :rdfs/range [:dol/region]}
 
 
  :dol/r-location-of
-{:owl/inverseOf :dol/r-location,
+{:rdfs/domain [:dol/region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/region],
- :rdfs/range [:dol/region],
+ :resource/iri :dol/r-location-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/r-location-of}
+ :owl/inverseOf :dol/r-location,
+ :resource/name "r-location-of",
+ :rdfs/range [:dol/region]}
 
 
  :dol/region
@@ -852,7 +998,9 @@
   {:owl/allValuesFrom [:dol/region],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/region}
+ :resource/iri :dol/region,
+ :resource/name "region",
+ :resource/namespace "dol"}
 
 
  :dol/relevant-part
@@ -860,24 +1008,30 @@
  :rdfs/comment
  ["Features that are relevant parts of their host, like a bump or an edge."],
  :rdfs/subClassOf [:dol/feature],
- :resource/id :dol/relevant-part}
+ :resource/iri :dol/relevant-part,
+ :resource/name "relevant-part",
+ :resource/namespace "dol"}
 
 
  :dol/set
 {:rdf/type :owl/Class,
  :rdfs/comment ["A mathematical set."],
  :rdfs/subClassOf [:dol/abstract],
- :resource/id :dol/set}
+ :resource/iri :dol/set,
+ :resource/name "set",
+ :resource/namespace "dol"}
 
 
  :dol/sibling-part
-{:owl/inverseOf :dol/sibling-part,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["Mereological sibling: having a common whole"],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/sibling-part,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/sibling-part}
+ :rdfs/comment ["Mereological sibling: having a common whole"],
+ :owl/inverseOf :dol/sibling-part,
+ :resource/name "sibling-part",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/space-region
@@ -892,7 +1046,9 @@
   {:owl/allValuesFrom [:dol/space-region],
    :owl/onProperty :dol/part,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/space-region}
+ :resource/iri :dol/space-region,
+ :resource/name "space-region",
+ :resource/namespace "dol"}
 
 
  :dol/spatial-location_q
@@ -900,7 +1056,9 @@
  :rdfs/comment
  ["A physical quality, q-located in (whose value is given within) ordinary spaces (geographical coordinates, cosmological positions, anatomical axes, etc.)."],
  :rdfs/subClassOf [:dol/physical-quality],
- :resource/id :dol/spatial-location_q}
+ :resource/iri :dol/spatial-location_q,
+ :resource/name "spatial-location_q",
+ :resource/namespace "dol"}
 
 
  :dol/spatio-temporal-particular
@@ -914,16 +1072,20 @@
  :rdfs/comment
  ["Dummy class for optimizing some property universes. It includes all entities that are not reifications of universals ('abstracts'), i.e. those entities that are in space-time."],
  :rdfs/subClassOf [:dol/particular],
- :resource/id :dol/spatio-temporal-particular}
+ :resource/iri :dol/spatio-temporal-particular,
+ :resource/name "spatio-temporal-particular",
+ :resource/namespace "dol"}
 
 
  :dol/spatio-temporal-presence-of
-{:owl/inverseOf :dol/spatio-temporally-present-at,
+{:rdfs/domain [:dol/spatio-temporal-region],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/spatio-temporal-region],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/spatio-temporal-presence-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/generic-location-of,
- :resource/id :dol/spatio-temporal-presence-of}
+ :owl/inverseOf :dol/spatio-temporally-present-at,
+ :resource/name "spatio-temporal-presence-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/spatio-temporal-region
@@ -931,56 +1093,68 @@
  :rdfs/comment
  ["Any region resulting from the composition of a space region with a temporal region, i.e. being present in region r at time t."],
  :rdfs/subClassOf [:dol/space-region],
- :resource/id :dol/spatio-temporal-region}
+ :resource/iri :dol/spatio-temporal-region,
+ :resource/name "spatio-temporal-region",
+ :resource/namespace "dol"}
 
 
  :dol/spatio-temporally-present-at
-{:owl/inverseOf :dol/spatio-temporal-presence-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/spatio-temporal-region],
+ :resource/iri :dol/spatio-temporally-present-at,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation,
- :resource/id :dol/spatio-temporally-present-at}
+ :owl/inverseOf :dol/spatio-temporal-presence-of,
+ :resource/name "spatio-temporally-present-at",
+ :rdfs/range [:dol/spatio-temporal-region]}
 
 
  :dol/specific-constant-constituent
-{:owl/inverseOf :dol/specific-constant-constituent-of,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/specific-constant-constituent,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["'Constituent' should depend on some layering of  the ontology. For example, scientific granularities or ontological 'strata' are  typical layerings. A constituent is a part belonging to a lower layer. Since layering is actually a partition of the ontology, constituents are not properly classified as parts, although this kinship can be intuitive for common sense. Example of specific constant constituents are the entities constituting a setting (a situation), whilethe entities constituting a collection are examples of generic constant constituents."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/specific-constant-constituent}
+ :owl/inverseOf :dol/specific-constant-constituent-of,
+ :resource/name "specific-constant-constituent",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/specific-constant-constituent-of
-{:owl/inverseOf :dol/specific-constant-constituent,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/specific-constant-constituent-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/specific-constant-constituent-of}
+ :owl/inverseOf :dol/specific-constant-constituent,
+ :resource/name "specific-constant-constituent-of",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/specific-constant-dependent
-{:owl/inverseOf :dol/specifically-constantly-dependent-on,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/specific-constant-dependent,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The constant dependence between two individuals. Taken here as primitive."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/specific-constant-dependent}
+ :owl/inverseOf :dol/specifically-constantly-dependent-on,
+ :resource/name "specific-constant-dependent",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/specifically-constantly-dependent-on
-{:owl/inverseOf :dol/specific-constant-dependent,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
+ :resource/iri :dol/specifically-constantly-dependent-on,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/specifically-constantly-dependent-on}
+ :owl/inverseOf :dol/specific-constant-dependent,
+ :resource/name "specifically-constantly-dependent-on",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/state
@@ -988,7 +1162,9 @@
  :rdfs/comment
  ["Within stative occurrences, we distinguish between  states and processes according to homeomericity: sitting is classified as a state  but running is classified as a process, since there are (very short) temporal parts  of a running that are not themselves runnings.In general, states differ from situations because they are not assumed to have a description from which they depend. They can be sequenced by some course, but they do not require a description as a unifying criterion.On the other hand, at any time, one can conceive a description that asserts the constraints by which a state of a certian type is such, and in this case, it becomes a situation.Since the decision of designing an explicit description that unifies a perdurant depends on context, task, interest, application, etc., when aligning an ontology do DLP, there can be indecision on where to align a state-oriented class. For example, in the WordNet alignment, we have decided to put only some physical states under 'state', e.g. 'turgor', in order to stress the social orientedness of DLP. But whereas we need to talk explicitly of the criteria by which we conceive turgor states, these will be put under 'situation'.Similar considerations are made for the other types of perdurants in DOLCE.A different notion of event (dealing with change) is currently investigated for further developments: being 'achievement', 'accomplishment', 'state', 'event', etc. can be also considered 'aspects' of processes or of parts of them. For example, the same process 'rock erosion in the Sinni valley' can be conceptualized as an accomplishment (what has brought the current state that e.g. we are trying to explain), as an achievement (the erosion process as the result of a previous accomplishment), as a state (if we collapse the time interval of the erosion into a time point), or as an event (what has changed our focus from a state to another).In the erosion case, we could have good motivations to shift from one aspect to another: a) causation focus, b) effectual focus, c) condensation d) transition (causality).If we want to consider all the aspects of a process together, we need to postulate a unifying descriptive set of criteria (i.e. a 'description'), according to which that process is circumstantiated in a 'situation'. The different aspects will arise as a parts of a same situation."],
  :rdfs/subClassOf [:dol/stative],
- :resource/id :dol/state}
+ :resource/iri :dol/state,
+ :resource/name "state",
+ :resource/namespace "dol"}
 
 
  :dol/stative
@@ -996,36 +1172,44 @@
  :rdfs/comment
  ["An occurrence-type is stative or eventive according  to whether it holds of the mereological sum of two of its instances, i.e. if it is  cumulative or not. A sitting occurrence is stative since the sum of two sittings  is still a sitting occurrence."],
  :rdfs/subClassOf [:dol/perdurant],
- :resource/id :dol/stative}
+ :resource/iri :dol/stative,
+ :resource/name "stative",
+ :resource/namespace "dol"}
 
 
  :dol/strong-connection
-{:owl/inverseOf :dol/strong-connection,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/strong-connection,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/mediated-relation-i,
  :rdfs/comment
  ["By strong connection here we mean a connection between  two entities that share a boundary."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/strong-connection}
+ :owl/inverseOf :dol/strong-connection,
+ :resource/name "strong-connection",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/t-inherent-in
-{:owl/inverseOf :dol/has-t-quality,
+{:rdfs/domain [:dol/quality],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/t-inherent-in,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["The immediate relation holding for qualities and entities at time t."],
- :rdfs/domain [:dol/quality],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/t-inherent-in}
+ :owl/inverseOf :dol/has-t-quality,
+ :resource/name "t-inherent-in",
+ :rdfs/range [:dol/particular]}
 
 
  :dol/temporal-location_q
 {:rdf/type :owl/Class,
  :rdfs/comment ["A temporal location quality."],
  :rdfs/subClassOf [:dol/temporal-quality],
- :resource/id :dol/temporal-location_q}
+ :resource/iri :dol/temporal-location_q,
+ :resource/name "temporal-location_q",
+ :resource/namespace "dol"}
 
 
  :dol/temporal-quality
@@ -1043,7 +1227,9 @@
   {:owl/allValuesFrom [:dol/temporal-region],
    :owl/onProperty :dol/q-location,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/temporal-quality}
+ :resource/iri :dol/temporal-quality,
+ :resource/name "temporal-quality",
+ :resource/namespace "dol"}
 
 
  :dol/temporal-region
@@ -1059,87 +1245,105 @@
   {:owl/allValuesFrom [:dol/temporal-quality],
    :owl/onProperty :dol/q-location-of,
    :rdf/type :owl/Restriction}],
- :resource/id :dol/temporal-region}
+ :resource/iri :dol/temporal-region,
+ :resource/name "temporal-region",
+ :resource/namespace "dol"}
 
 
  :dol/temporary-atomic-part
-{:owl/inverseOf :dol/temporary-atomic-part-of,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["Having an atom as part at a time t."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/temporary-atomic-part,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/proper-part,
- :resource/id :dol/temporary-atomic-part}
+ :rdfs/comment ["Having an atom as part at a time t."],
+ :owl/inverseOf :dol/temporary-atomic-part-of,
+ :resource/name "temporary-atomic-part",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-atomic-part-of
-{:owl/inverseOf :dol/temporary-atomic-part,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/temporary-atomic-part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/temporary-atomic-part-of}
+ :owl/inverseOf :dol/temporary-atomic-part,
+ :resource/name "temporary-atomic-part-of",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-part
-{:owl/inverseOf :dol/temporary-part-of,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/temporary-part,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["Being part at time t. It holds for endurants only. This is important to model parts that can change or be lost over time without affecting the identity of the whole. In FOL, this is expressed as a ternary relation, but in DLs we only can reason with binary relations, then only the necessary axiom of compresence is represented here."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/temporary-part}
+ :owl/inverseOf :dol/temporary-part-of,
+ :resource/name "temporary-part",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-part-of
-{:owl/inverseOf :dol/temporary-part,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/temporary-part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/temporary-part-of}
+ :owl/inverseOf :dol/temporary-part,
+ :resource/name "temporary-part-of",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-participant
-{:owl/inverseOf :dol/temporary-participant-in,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/temporary-participant,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation,
  :rdfs/comment
  ["Only some parts of the perdurant p have a participant e.In fact, participation can be constant (in all parts of the perdurant, e.g. in 'the car is running'), or temporary (in only some parts, e.g. in 'I'm electing the president').Implicitly, this relation has a temporal indexing.If needed, in OWL one can derive such indexing by expliciting what parts of p have e as _constant_ participant.An appropriate OWL axiom is created to bind this relation to a proper part of it, which has the temporary-participant as a constant one."],
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/immediate-relation,
- :resource/id :dol/temporary-participant}
+ :owl/inverseOf :dol/temporary-participant-in,
+ :resource/name "temporary-participant",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-participant-in
-{:owl/inverseOf :dol/temporary-participant,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/comment ["x participates in some of y's parts."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
+ :resource/iri :dol/temporary-participant-in,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/temporary-participant-in}
+ :rdfs/comment ["x participates in some of y's parts."],
+ :owl/inverseOf :dol/temporary-participant,
+ :resource/name "temporary-participant-in",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/temporary-proper-part
-{:owl/inverseOf :dol/temporary-proper-part-of,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/temporary-proper-part,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/temporary-part,
  :rdfs/comment
  ["Being proper part at time t. It holds for endurants only. This is important to model proper parts that can change or be lost over time without affecting the identity of the whole."],
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/temporary-part,
- :resource/id :dol/temporary-proper-part}
+ :owl/inverseOf :dol/temporary-proper-part-of,
+ :resource/name "temporary-proper-part",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/temporary-proper-part-of
-{:owl/inverseOf :dol/temporary-proper-part,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/endurant],
+ :resource/iri :dol/temporary-proper-part-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/temporary-proper-part-of}
+ :owl/inverseOf :dol/temporary-proper-part,
+ :resource/name "temporary-proper-part-of",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/time-interval
@@ -1147,85 +1351,103 @@
  :rdfs/comment
  ["A temporal region, measured according to a calendar."],
  :rdfs/subClassOf [:dol/temporal-region],
- :resource/id :dol/time-interval}
+ :resource/iri :dol/time-interval,
+ :resource/name "time-interval",
+ :resource/namespace "dol"}
 
 
  :dol/time-of-q-presence-of
-{:owl/inverseOf :dol/q-present-at,
+{:rdfs/domain [:dol/time-interval],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/time-interval],
- :rdfs/range [:dol/physical-quality],
+ :resource/iri :dol/time-of-q-presence-of,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/mediated-relation-i,
- :resource/id :dol/time-of-q-presence-of}
+ :owl/inverseOf :dol/q-present-at,
+ :resource/name "time-of-q-presence-of",
+ :rdfs/range [:dol/physical-quality]}
 
 
  :dol/total-constant-participant
-{:owl/inverseOf :dol/total-constant-participant-in,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/total-constant-participant,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/participant,
  :rdfs/comment
  ["The perdurant p has a participant e that constantly participates in p with all its parts, e.g. in 'I played the concert' (where the concert is a solo concert)."],
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/participant,
- :resource/id :dol/total-constant-participant}
+ :owl/inverseOf :dol/total-constant-participant-in,
+ :resource/name "total-constant-participant",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/total-constant-participant-in
-{:owl/inverseOf :dol/total-constant-participant,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
+ :resource/iri :dol/total-constant-participant-in,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/total-constant-participant-in}
+ :owl/inverseOf :dol/total-constant-participant,
+ :resource/name "total-constant-participant-in",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/total-temporary-participant
-{:owl/inverseOf :dol/total-temporary-participant-in,
+{:rdfs/domain [:dol/perdurant],
  :rdf/type :owl/ObjectProperty,
+ :resource/iri :dol/total-temporary-participant,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/participant,
  :rdfs/comment
  ["The perdurant p has a participant e that temporarily participates in p with all its parts, e.g. in 'I played the concert' (where I actually played just an ouverture).See also 'temporary-participant'."],
- :rdfs/domain [:dol/perdurant],
- :rdfs/range [:dol/endurant],
- :rdfs/subPropertyOf :dol/participant,
- :resource/id :dol/total-temporary-participant}
+ :owl/inverseOf :dol/total-temporary-participant-in,
+ :resource/name "total-temporary-participant",
+ :rdfs/range [:dol/endurant]}
 
 
  :dol/total-temporary-participant-in
-{:owl/inverseOf :dol/total-temporary-participant,
+{:rdfs/domain [:dol/endurant],
  :rdf/type :owl/ObjectProperty,
- :rdfs/domain [:dol/endurant],
- :rdfs/range [:dol/perdurant],
+ :resource/iri :dol/total-temporary-participant-in,
+ :resource/namespace "dol",
  :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/total-temporary-participant-in}
+ :owl/inverseOf :dol/total-temporary-participant,
+ :resource/name "total-temporary-participant-in",
+ :rdfs/range [:dol/perdurant]}
 
 
  :dol/weak-connection
-{:owl/inverseOf :dol/weak-connection,
+{:rdfs/domain [:dol/particular],
  :rdf/type :owl/SymmetricProperty,
+ :resource/iri :dol/weak-connection,
+ :resource/namespace "dol",
+ :rdfs/subPropertyOf :dol/immediate-relation-i,
  :rdfs/comment
  ["The basic connection, not requiring a  common boundary."],
- :rdfs/domain [:dol/particular],
- :rdfs/range [:dol/particular],
- :rdfs/subPropertyOf :dol/immediate-relation-i,
- :resource/id :dol/weak-connection}
+ :owl/inverseOf :dol/weak-connection,
+ :resource/name "weak-connection",
+ :rdfs/range [:dol/particular]}
 
 
  :owl/Class
-#:resource{:id :owl/Class}
+#:resource{:iri :owl/Class, :name "Class", :namespace "owl"}
 
 
  :owl/ObjectProperty
-#:resource{:id :owl/ObjectProperty}
+#:resource{:iri :owl/ObjectProperty,
+           :name "ObjectProperty",
+           :namespace "owl"}
 
 
  :owl/Ontology
-#:resource{:id :owl/Ontology}
+#:resource{:iri :owl/Ontology, :name "Ontology", :namespace "owl"}
 
 
  :owl/Restriction
-#:resource{:id :owl/Restriction}
+#:resource{:iri :owl/Restriction, :name "Restriction", :namespace "owl"}
 
 
  :owl/SymmetricProperty
-#:resource{:id :owl/SymmetricProperty}
+#:resource{:iri :owl/SymmetricProperty,
+           :name "SymmetricProperty",
+           :namespace "owl"}
 }

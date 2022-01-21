@@ -28,11 +28,11 @@
   "Resolve :db/id in the argument map."
   [m conn & {:keys [keep-db-ids?]}]
   (letfn [(subobj [x]
-            (cond (and (map? x) (contains? x :resource/id)) (:resource/id x),          ; It is a whole resource, return ref.
+            (cond (and (map? x) (contains? x :resource/iri)) (:resource/iri x),          ; It is a whole resource, return ref.
                   (and (map? x) (contains? x :db/id) (== (count x) 1))                 ; It is an object ref...
                   (or (and (map? x)
                            (contains? x :db/id)
-                           (d/q `[:find ?id . :where [~(:db/id x) :resource/id ?id]] conn)) ; ...return keyword if it is a resource...
+                           (d/q `[:find ?id . :where [~(:db/id x) :resource/iri ?id]] conn)) ; ...return keyword if it is a resource...
                       (subobj (dp/pull conn '[*] (:db/id x)))),                             ; ...otherwise it is some other structure.
                   (map? x) (reduce-kv
                             (fn [m k v] (if (and (= k :db/id) (not keep-db-ids?)) m (assoc m k (subobj v))))

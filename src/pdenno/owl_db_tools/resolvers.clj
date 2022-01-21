@@ -2,14 +2,16 @@
   "Pathom3 resolvers to make accessing the DB easy."
   (:require
    [com.wsscode.misc.macros    :as pmacs]
+   [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
    [com.wsscode.pathom3.connect.indexes :as pci]
    [com.wsscode.pathom3.connect.operation :as pco]
+   [com.wsscode.pathom3.interface.eql :as p.eql]
    [datahike.api               :as d]
    [datahike.pull-api          :as dp]
    [pdenno.owl-db-tools.core   :as owl :refer [*conn*]]
    [pdenno.owl-db-tools.util   :as util]))
 
-(defn attr-info 
+(defn attr-info
   "Return a vector of maps containing :attr/id and :attr/type
    for every attribute in the DB."
   [conn]
@@ -24,9 +26,9 @@
     - :experssion? : DB attributes that do not appear directly in resources."
   [conn]
   (->> (d/q '[:find [?attr ...] :where [_ ?attr _]] conn)
-       (remove (fn [x] (#{"source" "app" "box" "db"} (namespace x))))
+       (remove (fn [x] (#{"source" "app" "box" "db"} (namespace x)))) ; ToDo handle some of these.
        (reduce (fn [res attr]
-                 (if (d/q `[:find ?x . :where [?x ~attr] [?x :resource/id]] *conn*)
+                 (if (d/q `[:find ?x . :where [?x ~attr] [?x :resource/iri]] *conn*)
                    (update res   :resource? conj attr)
                    (update res :expression? conj attr)))
                {:expression? #{} :resource? #{}})))
@@ -46,18 +48,18 @@
   (if resolve?
     (fn [_env {:resource/keys [iri]}]
       (when *conn*
-         (-> (dp/pull *conn* [attr] [:resource/id iri])
+         (-> (dp/pull *conn* [attr] [:resource/iri iri])
              (util/resolve-obj *conn*))))
     (fn [_env {:resource/keys [iri]}]
       (when *conn*
-        (dp/pull *conn* [attr] [:resource/id iri])))))
+        (dp/pull *conn* [attr] [:resource/iri iri])))))
 
 (defn make-resource-attr-resolvers
   "Return a vector of resolvers for rdf resource attributes."
   [conn]
   (let [attrs (-> (attr-types conn) :resource? vec sort) ; sort for easier debugging.
         attr-types (attr-info conn)]
-    (vec (for [att attrs]
+    (vec (for [att attrs] ; ToDo: I couldn't use pbir/single-attribute-resolver here. {0 val, 1 val,...)
            (let [ref? (= :db.type/ref (some #(when (= (:attr/id %) att) (:attr/type %)) attr-types))]
              (make-resolver (symbol (str "iri-to-" (namespace att) "-" (name att)))
                             {:input [:resource/iri],
@@ -65,23 +67,44 @@
                              :fn (attr-fn att ref?)}))))))
 
 (pco/defresolver resource-by-iri [{:resource/keys [iri]}]
-  {:resource/body (dp/pull *conn* '[*] [:resource/id iri])})
+  {:resource/body (dp/pull *conn* '[*] [:resource/iri iri])})
 
 (defn pull-resource
   "Return the nicely sorted sorted-map of a resource; it's like pretty printing."
-  [resource-id conn & {:keys [keep-db-ids? sort?] :or {sort? true}}]
+  [resource-iri conn & {:keys [keep-db-ids? sort?] :or {sort? true}}]
   (binding [*conn* conn]
-    (cond->   (resource-by-iri {:resource/iri resource-id})
+    (cond->   (resource-by-iri {:resource/iri resource-iri})
         true  :resource/body
         true  (util/resolve-obj *conn* :keep-db-ids? keep-db-ids?)
         sort? identity))) ; ToDo: Sort
 
-(def other-resolvers "a vector of pre-defined resolvers for accessing the OWL DB." [resource-by-iri])
+;;; ToDo:
+;;;   This one just provides (as a vector) :resource/iri attributes for the whole DB, or with parameters, some subset of those.
+;;;   I need something that would allow such things AND ALSO allow EQL with further navigation. This doesn't do that.
+(def iris-with-filters
+  (pbir/constantly-fn-resolver
+   :owl/db
+   (fn [env]
+     (vec (if-let  [filter-params (get (pco/params env) :filter-by)] ; Retrieve parameter.
+         (d/q `[:find ?iri
+                :keys resource/iri
+                :where
+                [?e :resource/iri ?iri]
+                [?e ~(:attr filter-params) ~(:val filter-params)]] *conn*)
+         (d/q '[:find ?iri
+                :keys resource/iri
+                :where
+                [?e :resource/iri ?iri]] *conn*))))))
+
+(def other-resolvers "a vector of pre-defined resolvers for accessing the OWL DB."
+  [resource-by-iri
+   iris-with-filters])
 
 (defn register-resolvers!
   "Alter the value of the var index to refer to the automatically-generated
    Pathom resovlers, plus others defined in this namespace. (See the var other-resolvers)."
   [conn]
-  (pci/register
-   (into other-resolvers
-         (make-resource-attr-resolvers conn))))
+   (-> (make-resource-attr-resolvers conn)
+       (into other-resolvers)
+       pci/register
+       p.eql/boundary-interface))

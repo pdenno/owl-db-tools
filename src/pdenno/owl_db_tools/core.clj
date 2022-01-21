@@ -13,7 +13,7 @@
   (:import java.io.ByteArrayInputStream))
 
 ;;; * I use 'dvecs' to mean the Jena data stored as a vector of 3-element vectors.
-;;; * I use 'dmaps' to mean the dvecs data reorganized as a map indexed by :resource/id or a keyword in the "temp" from Jena.
+;;; * I use 'dmaps' to mean the dvecs data reorganized as a map indexed by :resource/iri or a keyword in the "temp" from Jena.
 ;;; * I use 'dmapv' to mean the dmaps data reorganized as a vector of maps with temps resolved.
 ;;; And those three bullets points pretty much describe the program architecture!
 
@@ -31,18 +31,20 @@
 (def debugging? false)
 (util/config-log (if debugging? :debug :info))
 
-;;; There is a bijection between :resource/id and a subset of :db/id.
+;;; There is a bijection between :resource/iri and a subset of :db/id.
 ;;; The types of OWL things are defined in https://www.w3.org/TR/2012/REC-owl2-quick-reference-20121211/
 (def app-schema
-  [#:db{:ident :resource/id       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
-   #:db{:ident :source/short-name :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
-   #:db{:ident :source/long-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
-   #:db{:ident :source/loaded?    :cardinality :db.cardinality/one :valueType :db.type/boolean}
-   #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These are useful when
-   #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
-   #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
-   #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
-   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}])
+  [#:db{:ident :resource/iri       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+   #:db{:ident :resource/name      :cardinality :db.cardinality/one :valueType :db.type/string}
+   #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string}
+   #:db{:ident :source/short-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/long-name   :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/loaded?     :cardinality :db.cardinality/one :valueType :db.type/boolean}
+   #:db{:ident :box/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These are useful when
+   #:db{:ident :box/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
+   #:db{:ident :box/number-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
+   #:db{:ident :box/string-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
+   #:db{:ident :app/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 
 (def owl-schema
    ;; multi-valued properties
@@ -119,7 +121,7 @@
   "Other keywords are assumed to be resources"
   (->>
    @full-schema
-   (filter #(and (= (:db/valueType %) :db.type/keyword) (not= (:db/ident %) :resource/id)))
+   (filter #(and (= (:db/valueType %) :db.type/keyword) (not= (:db/ident %) :resource/iri)))
    (map :db/ident)
    set))
 
@@ -359,13 +361,13 @@
 
 (defn partition-temp-perm
   "Create a map with two keys:
-     :temp-data - a map of temp resources indexed by their :resource/id.
+     :temp-data - a map of temp resources indexed by their :resource/iri.
      :perm-data - a subset of the argument vector with temp maps removed. "
   [dmapv]
   (reduce (fn [res m]
-            (let [id (:resource/id m)]
+            (let [id (:resource/iri m)]
               (if (temp-id? id)
-                (assoc-in  res [:temp-data id] (dissoc m :resource/id))
+                (assoc-in  res [:temp-data id] (dissoc m :resource/iri))
                 (update res :perm-data conj m))))
           {:temp-data {} :perm-data []}
           dmapv))
@@ -444,14 +446,16 @@
 (defn lookup-resource
   "Return the :db/id of the resource given the its ns-qualified keyword identifier."
   [id conn]
-  (or (d/q `[:find ?e . :where [?e :resource/id ~id]] @conn)
+  (or (d/q `[:find ?e . :where [?e :resource/iri ~id]] @conn)
       (do (log/debug "Making resource on-the-fly:" id)
-          (transact? conn [{:resource/id id}])
+          (transact? conn [{:resource/iri id
+                            :resource/name (name id)
+                            :resource/namespace (namespace id)}])
           (lookup-resource id conn))))
 
 (defn resolve-temp-refs
   "resolve-temps created references to resources, :resource/temp-ref.
-   Stubs for all :resource/ids were transacted to the DB.
+   Stubs for all :resource/iris were transacted to the DB.
    This recursively replaces :resource/temp-ref with their DH entity ID.
    Argument is a vector of maps, one for each resource."
   [dmapv conn]
@@ -478,10 +482,12 @@
     (learn-schema! dvecs conn)
     (let [rdf-lists (resolve-rdf-lists dvecs)
           dmapv (->> (triples2maps dvecs rdf-lists) ; returns a map indexed by resource or Jena ID in "temp" ns.
-                     (reduce-kv (fn [res k v] (conj res (assoc v :resource/id k))) []) ; give them all a :resource/id.
+                     (reduce-kv (fn [res k v] (conj res (assoc v :resource/iri k))) []) ; give them all a :resource/iri.
                      resolve-temps) ; gets and returns a vec of maps.
-          resources (reduce-kv (fn [res _ v] (if-let [id (:resource/id v)] (conj res id) res)) #{} dmapv)]
-      (transact? conn (mapv (fn [x] {:resource/id x}) resources)) ; transact resource stubs.
+          resources (reduce-kv (fn [res _ v] (if-let [id (:resource/iri v)] (conj res id) res)) #{} dmapv)]
+      (transact? conn (mapv (fn [x] {:resource/iri x
+                                     :resource/name (name x)
+                                     :resource/namespace (namespace x)}) resources)) ; transact resource stubs.
       (transact? conn (resolve-temp-refs dmapv conn)))))
 
 (defn prefix-maps
@@ -493,7 +499,7 @@
   (let [jena-names (as-> (kb/.root-ns-map jkb) ?x
                      (dissoc ?x "")
                      (reduce-kv (fn [res sname lname]
-                                  (conj res {:resource/id (onto-keyword lname)
+                                  (conj res {:resource/iri (onto-keyword lname)
                                              :source/short-name sname
                                              :source/long-name (-> (re-matches #"^([^#]+)#?" lname) second)}))
                                 []
@@ -510,10 +516,10 @@
     @result))
 
 (defn arg-prefix-maps
-  "Define a map relating prefixes to URIs from, the create-db ontos argument."
+  "Define a map relating prefixes to URIs for the create-db ontos argument."
   [ontos]
   (reduce-kv (fn [res k v]
-               (conj res {:resource/id (-> v :uri onto-keyword)
+               (conj res {:resource/iri (-> v :uri onto-keyword)
                           :source/short-name k
                           :source/long-name (:uri v)}))
                []
@@ -535,7 +541,7 @@
   (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)
         load-ontos (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} ontos)]
     (cond (and rebuild? site-ok?)
-          (do (when (d/database-exists? db-cfg) (d/delete-database db-cfg))
+          (do (d/delete-database db-cfg)
               (d/create-database db-cfg)
               (let [conn-atm (d/connect db-cfg)]
                 (log/info "Initializing a fresh DB.")
@@ -558,7 +564,7 @@
 (defn resource-ids ; ToDo should/could this be lazy?
   "Return a vector of resource keywords"
   [conn]
-  (d/q '[:find [?name ...] :where [_ :resource/id ?name]] conn))
+  (d/q '[:find [?name ...] :where [_ :resource/iri ?name]] conn))
 
 (defn sources
   "Return maps describing what was loaded"

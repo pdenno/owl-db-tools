@@ -21,8 +21,8 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-  		     :keep-history? false
-		     :schema-flexibility :write})
+			 :keep-history? false
+			 :schema-flexibility :write})
 ```
 There are also examples in the test directory.
 
@@ -91,8 +91,8 @@ and [Datahike API docs](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/da
 
 # API for queries
 
-The database can be queried directly using Datahike's `query` and `pull` APIs, or using Pathom3 and the 
-Pathom3 resolvers automatically generated for the attributes of the OWL DB read. 
+The database can be queried directly using Datahike's `query` and `pull` APIs, or using Pathom3 and the
+Pathom3 resolvers automatically generated for the attributes of the OWL DB read.
 A typical the Datahike query is depicted below paired with filter to get all the RDF resources defined in the DOLCE namespace of the example database.
 
 ```clojure
@@ -107,32 +107,30 @@ A typical the Datahike query is depicted below paired with filter to get all the
 
 ## Pathom3-based API
 
-[Pathom](https://pathom3.wsscode.com/) is a powerful query language similar to GraphQL. 
+[Pathom](https://pathom3.wsscode.com/) is a powerful query language similar to GraphQL.
 With Pathom, you specify the shape of the data you wish to acquire and let its planner do the work of composing a query that provides the data.
-The use of Pathom positions owl-db-tools to be used as a remote client. 
-Pathom's documentation is quite good, so only a simple example is provided here. 
+The use of Pathom positions owl-db-tools to be used as a remote client.
+Pathom's documentation is quite good, so only a simple example is provided here.
 
 ```clojure
 (in-ns 'pdenno.owl-db-tools.resolvers)
 
-(require '[com.wsscode.pathom3.interface.eql :as p.eql])
+(def owl-db (register-resolvers! *conn*)) ; Create the basic attribute resolvers for your database.
 
-(register-resolvers! *conn*) ; Create the basic attribute resolvers for your database. 
-
-(p.eql/process index [{[:resource/iri :info/mapped-to] [:rdf/type :rdfs/domain :rdfs/subPropertyOf]}])
+(owl-db [{[:resource/iri :info/mapped-to] [:rdf/type :rdfs/domain :rdfs/subPropertyOf]}])
 
 ;;; Returns the following:
-{[:resource/iri :info/mapped-to] 
-    {:rdf/type :owl/ObjectProperty, 
-     :rdfs/domain [:dol/particular], 
-     :rdfs/subPropertyOf :dol/mediated-relation}}
+{[:resource/iri :info/mapped-to]
+	{:rdf/type :owl/ObjectProperty,
+	 :rdfs/domain [:dol/particular],
+	 :rdfs/subPropertyOf :dol/mediated-relation}}
 ```
 
 ### `pull-resource`
 
-`pull-resource` is a convenience function in the resolvers namespace that wraps a Pathom3 resolver. 
-It returns a map of all the triples associated with an RDF resource. 
-It takes two required arguments the resource keyword and the connection object. 
+`pull-resource` is a convenience function in the resolvers namespace that wraps a Pathom3 resolver.
+It returns a map of all the triples associated with an RDF resource.
+It takes two required arguments the resource keyword and the connection object.
 
 You can specify `:keep-db-ids? true` in the call if you would like the result to include database IDs of the returned structure's elements.
 
@@ -174,12 +172,12 @@ to filter the result to user-specified, learned, or all attributes. The default 
 
 ## Database Schema
 
-The initial database schema is as shown below. 
-The data you load may contain attributes beyond those shown. 
-If while reading the data, additional attributes are encountered, the data will be studied and a best guess at the 
-cardinality and type of the data will be made. 
-An attribute spec will be defined accordingly. 
-You can alway query to see what attribute specs were defined. 
+The initial database schema is as shown below.
+The data you load may contain attributes beyond those shown.
+If while reading the data, additional attributes are encountered, the data will be studied and a best guess at the
+cardinality and type of the data will be made.
+An attribute spec will be defined accordingly.
+You can alway query to see what attribute specs were defined.
 You can use `:user-attrs` on the call to `create-db!` to override the guessing process on an individual attribute basis.
 
 
