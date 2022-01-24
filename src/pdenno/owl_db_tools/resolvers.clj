@@ -79,30 +79,46 @@
         sort? identity))) ; ToDo: Sort
 
 ;;; ToDo:
-;;;   This one just provides (as a vector) :resource/iri attributes for the whole DB, or with parameters, some subset of those.
-;;;   I need something that would allow such things AND ALSO allow EQL with further navigation. This doesn't do that.
+;;;   This one just provides (as a vector) of resource names for the whole DB, or with parameters, some subset of those.
+;;;   I need something that would allow such things AND ALSO allow further EQL navigation. This doesn't do that.
+;;;   Also, constantly-fn-resolvers don't cache. 
+;;; (owl-db '[(:owl/db {:filter-by {:attr :resource/namespace :val "dol"}})])
 (def iris-with-filters
   (pbir/constantly-fn-resolver
-   :owl/db
+   :ontology/context
    (fn [env]
-     (vec (if-let  [filter-params (get (pco/params env) :filter-by)] ; Retrieve parameter.
-         (d/q `[:find ?iri
-                :keys resource/iri
-                :where
-                [?e :resource/iri ?iri]
-                [?e ~(:attr filter-params) ~(:val filter-params)]] *conn*)
-         (d/q '[:find ?iri
-                :keys resource/iri
-                :where
-                [?e :resource/iri ?iri]] *conn*))))))
+     (let  [params (:filter-by (pco/params env)) ; Retrieve parameter, atom or vector.
+            filters (if (vector? params) params (vector params))]
+       (-> (d/q `[:find [?iri ...]
+                  :where
+                  [?e :resource/iri ?iri]
+                  ~@(map (fn [p] `[?e ~(:attr p) ~(:val p)]) filters)] *conn*)
+           sort
+           vec)))))
 
-(def other-resolvers "a vector of pre-defined resolvers for accessing the OWL DB."
-  [resource-by-iri
+(def diag (atom nil))
+
+(pco/defresolver onto-test [{:ontology/keys [context]}]
+  {:ontology/object-property
+   (let [res (filterv (fn [iri]
+                        (d/q `[:find ?e . 
+                               :where
+                               [?e :resource/iri ~iri]
+                               [?e :rdf/type ?type]
+                               [?type :resource/iri :owl/ObjectProperty]] *conn*))
+                      context)]
+     (println "Here!")
+     (reset! diag {:context context :res res})
+     res)})
+
+(def other-resolvers "a vector of miscellaneous resolvers defined in this namespace"
+  [;resource-by-iri
+   onto-test
    iris-with-filters])
 
 (defn register-resolvers!
-  "Alter the value of the var index to refer to the automatically-generated
-   Pathom resovlers, plus others defined in this namespace. (See the var other-resolvers)."
+  "Register resolvers and create a boundary interface function that takes as an argument 
+   EQL compatible with any of the resolvers defined/computed in this file."
   [conn]
    (-> (make-resource-attr-resolvers conn)
        (into other-resolvers)

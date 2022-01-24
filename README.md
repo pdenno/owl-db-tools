@@ -125,6 +125,23 @@ Pathom's documentation is quite good, so only a simple example is provided here.
 	 :rdfs/domain [:dol/particular],
 	 :rdfs/subPropertyOf :dol/mediated-relation}}
 ```
+There is also a Pathom resolver for obtaining the names of all the RDF resource in the database. 
+This resolver provides an optional [Pathom parameter](https://pathom3.wsscode.com/docs/resolvers/#parameters) that allows
+filtering, for example, to retrieve all the names in a given namespace:
+
+```clojure
+(owl-db '[(:ontology/context {:filter-by {:attr :resource/namespace :val "dol"}})])
+```
+The `:filter-by` parameter may be a vector of such `{:attr ... :val ...}` maps, but keep in mind that many 
+resource attributes are references (to accommodate expressions). Thus, the following won't work:
+
+
+```clojure
+(owl-db '[(:owl/db {:filter-by [{:attr :resource/namespace :val "dol"}  ; Won't work. 
+                                {:attr :rdf/type :val :owl/Class}]})])  ; :rdf/type is a DB reference, not a value such as :owl/Class.
+
+```
+For such activities, it is better to use the Datahike interfaces.
 
 ### `pull-resource`
 
@@ -185,15 +202,17 @@ Details about such schema can be found in the [Datahike schema docs](https://clj
 
 ```clojure
 (def app-schema
-  [#:db{:ident :resource/id       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
-   #:db{:ident :source/short-name :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
-   #:db{:ident :source/long-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
-   #:db{:ident :source/loaded?    :cardinality :db.cardinality/one :valueType :db.type/boolean}
-   #:db{:ident :box/boolean-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These for useful when
-   #:db{:ident :box/keyword-val   :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
-   #:db{:ident :box/number-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
-   #:db{:ident :box/string-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
-   #:db{:ident :app/origin        :cardinality :db.cardinality/one :valueType :db.type/keyword}])
+  [#:db{:ident :resource/id        :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+   #:db{:ident :resource/name      :cardinality :db.cardinality/one :valueType :db.type/string}
+   #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string} 
+   #:db{:ident :source/short-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/long-name   :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
+   #:db{:ident :source/loaded?     :cardinality :db.cardinality/one :valueType :db.type/boolean}
+   #:db{:ident :box/boolean-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; These for useful when
+   #:db{:ident :box/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
+   #:db{:ident :box/number-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
+   #:db{:ident :box/string-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
+   #:db{:ident :app/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 
 (def owl-schema
    ;; multi-valued properties
