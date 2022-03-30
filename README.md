@@ -98,7 +98,7 @@ A typical the Datahike query is depicted below paired with filter to get all the
 ```clojure
 (require '[datahike.api :as d])
 
-(->> (d/q '[:find [?v ...] :where [_ :resource/id ?v]] @conn)
+(->> (d/q '[:find [?v ...] :where [_ :resource/iri ?v]] @conn)
 	 (filter #(= "dol" (namespace %))) sort)
 
 ; Returns
@@ -166,7 +166,7 @@ You can specify `:keep-db-ids? true` in the call if you would like the result to
   {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/part, :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/temporal-quality], :owl/onProperty :dol/has-quality, :rdf/type :owl/Restriction}
   {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/specific-constant-constituent, :rdf/type :owl/Restriction}],
- :resource/id :dol/perdurant}
+ :resource/iri :dol/perdurant}
 ```
 
 ### `resource-ids`

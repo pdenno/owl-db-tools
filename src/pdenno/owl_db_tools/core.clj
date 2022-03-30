@@ -587,3 +587,19 @@
       true (map first)
       (not (origin :all)) (filter #(origin (:app/origin %)))
       true (sort-by :db/id))))
+
+#_(defn class-order
+  "Return the map as a sorted map with nice ordering of keys for humans."
+  [m]
+  (into (sorted-map-by
+         (fn [k1 k2]
+           (cond (= k1 :resource/id) -1
+                 (= k2 :resource/id) +1
+                 (= k1 :rdf/type) -1
+                 (= k2 :rdf/type) +1
+                 (= k1 :rdfs/subClassOf) -1
+                 (= k2 :rdfs/subClassOf) +1
+                 (= k1 :owl/comment) +1
+                 (= k2 :owl/comment) +1)))
+         m))
+
