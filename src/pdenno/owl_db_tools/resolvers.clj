@@ -69,14 +69,25 @@
 (pco/defresolver resource-by-iri [{:resource/keys [iri]}]
   {:resource/body (dp/pull *conn* '[*] [:resource/iri iri])})
 
+(defn owl-order
+  "Return a comparator value for ordering the keys of a sorted map of owl-db-tools stuff."
+  [x y]
+  (cond (= x :resource/iri) -1
+        (= y :resource/iri)  1
+        (= x :resource/name)  -1
+        (= y :resource/name)   1
+        (= x :resource/namespace) -1
+        (= y :resource/namespace)  1
+        :else (compare x y))) 
+
 (defn pull-resource
   "Return the nicely sorted sorted-map of a resource; it's like pretty printing."
   [resource-iri conn & {:keys [keep-db-ids? sort?] :or {sort? true}}]
   (binding [*conn* conn]
-    (cond->   (resource-by-iri {:resource/iri resource-iri})
-        true  :resource/body
-        true  (util/resolve-obj *conn* :keep-db-ids? keep-db-ids?)
-        sort? identity))) ; ToDo: Sort
+    (as->  (resource-by-iri {:resource/iri resource-iri}) ?x
+        (:resource/body ?x)
+        (util/resolve-obj ?x *conn* :keep-db-ids? keep-db-ids?)
+        (if sort? (into (sorted-map-by owl-order) ?x) ?x))))
 
 ;;; ToDo:
 ;;;   This one just provides (as a vector) of resource names for the whole DB, or with parameters, some subset of those.
