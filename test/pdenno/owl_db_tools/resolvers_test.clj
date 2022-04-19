@@ -8,7 +8,7 @@
    [pdenno.owl-db-tools.core      :as owl :refer [*conn*]]
    [pdenno.owl-db-tools.resolvers :as res]))
 
-(def big-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"}
+(def big-cfg {:store {:backend :file :path (str (System/getenv "HOME") "/Databases/datahike-owl-db")}
               :keep-history? false
               :schema-flexibility :write})
 

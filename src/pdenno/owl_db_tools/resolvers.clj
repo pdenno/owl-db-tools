@@ -78,7 +78,31 @@
         (= y :resource/name)   1
         (= x :resource/namespace) -1
         (= y :resource/namespace)  1
-        :else (compare x y))) 
+        :else (compare x y)))
+
+(defn subclass-of-order
+  "Sort a :rdfs/subClassOf property."
+  [x y]
+  (cond (= x :owl/onProperty) -1
+        (= y :owl/onProperty)  1
+        (= x :owl/allValuesFrom) -1
+        (= y :owl/allValuesFrom)  1
+        (= x :owl/someValuesFrom) -1
+        (= y :owl/someValuesFrom)  1
+        :else (compare x y)))
+
+(defn subclass-of-sort
+  "Sort a:rdfs/subClassOf property (a vector)."
+  [v]
+  (->> v
+       (sort (fn [x y] (cond (and (keyword? x) (keyword? y)) (compare x y),
+                             (keyword? x) -1
+                             (keyword? y)  1
+                             (and (map? x) (map? y)) (compare (:owl/onProperty x) (:owl/onProperty y))
+                             :else (compare x y))))
+       (mapv #(if (map? %)
+                (into (sorted-map-by subclass-of-order) %)
+                %))))
 
 (defn pull-resource
   "Return the nicely sorted sorted-map of a resource; it's like pretty printing."
@@ -87,12 +111,15 @@
     (as->  (resource-by-iri {:resource/iri resource-iri}) ?x
         (:resource/body ?x)
         (util/resolve-obj ?x *conn* :keep-db-ids? keep-db-ids?)
-        (if sort? (into (sorted-map-by owl-order) ?x) ?x))))
+        (if sort? (into (sorted-map-by owl-order) ?x) ?x)
+        (if (contains? ?x :rdfs/subClassOf)
+          (update ?x :rdfs/subClassOf subclass-of-sort)
+          ?x))))
 
 ;;; ToDo:
 ;;;   This one just provides (as a vector) of resource names for the whole DB, or with parameters, some subset of those.
 ;;;   I need something that would allow such things AND ALSO allow further EQL navigation. This doesn't do that.
-;;;   Also, constantly-fn-resolvers don't cache. 
+;;;   Also, constantly-fn-resolvers don't cache.
 ;;; (owl-db '[(:owl/db {:filter-by {:attr :resource/namespace :val "dol"}})])
 (def iris-with-filters
   (pbir/constantly-fn-resolver
@@ -112,7 +139,7 @@
 (pco/defresolver onto-test [{:ontology/keys [context]}]
   {:ontology/object-property
    (let [res (filterv (fn [iri]
-                        (d/q `[:find ?e . 
+                        (d/q `[:find ?e .
                                :where
                                [?e :resource/iri ~iri]
                                [?e :rdf/type ?type]
@@ -128,7 +155,7 @@
    iris-with-filters])
 
 (defn register-resolvers!
-  "Register resolvers and create a boundary interface function that takes as an argument 
+  "Register resolvers and create a boundary interface function that takes as an argument
    EQL compatible with any of the resolvers defined/computed in this file."
   [conn]
    (-> (make-resource-attr-resolvers conn)

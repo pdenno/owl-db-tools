@@ -1,17 +1,17 @@
 {:paths ["src" "resources"]
  :deps {com.taoensso/timbre           {:mvn/version "5.2.1"}
         edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
-        com.wsscode/pathom3           {:mvn/version "2022.01.09-alpha"}
-        io.replikativ/datahike        {:mvn/version "0.4.1488"}
-        org.clojure/clojure           {:mvn/version "1.10.3"}
+        com.wsscode/pathom3           {:mvn/version "2022.03.17-alpha"}
+        io.replikativ/datahike        {:mvn/version "0.4.1491"}
+        org.clojure/clojure           {:mvn/version "1.11.1"}
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
 
  :aliases  {:test {:extra-paths ["test"]
-                   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.60.977"}}}
+                   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.60.1029"}}}
 
             :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
                   :exec-fn hf.depstar/jar ; ToDo: Start using tools.build. "My build.clj wrapper makes it easier to switch."
-                  :exec-args {:jar "owl-db-tools-1.0.36.jar"
+                  :exec-args {:jar "owl-db-tools-1.0.36.jar" ; See https://clojure.org/guides/tools_build#_source_library_jar_build
                               :sync-pom true
                               :version "1.0.36"
                               :group-id "com.github.pdenno"
@@ -26,4 +26,8 @@
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
                                  :sign-releases? true
-                                 :artifact "owl-db-tools-1.0.36.jar"}}}}
+                                 :artifact "owl-db-tools-1.0.36.jar"}}
+            
+            ;; This for build.tools
+            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}}
+                    :ns-default build}}}
