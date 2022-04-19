@@ -155,18 +155,20 @@ You can specify `:keep-db-ids? true` in the call if you would like the result to
 (res/pull-resource :dol/perdurant *conn*)
 
 ; Returns
-{:owl/disjointWith [:dol/endurant],
+{:resource/iri :dol/perdurant,
+ :resource/name "perdurant",
+ :resource/namespace "dol",
+ :owl/disjointWith [:dol/endurant :dol/abstract :dol/quality],
  :rdf/type :owl/Class,
  :rdfs/comment
  ["Perdurants (AKA occurrences) comprise what are variously called events, processes, phenomena..."],
  :rdfs/subClassOf
  [:dol/spatio-temporal-particular
+  {:owl/onProperty :dol/has-quality, :owl/allValuesFrom [:dol/temporal-quality], :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/has-quality, :owl/someValuesFrom [:dol/temporal-location_q], :rdf/type :owl/Restriction}
+  {:owl/onProperty :dol/part, :owl/allValuesFrom [:dol/perdurant], :rdf/type :owl/Restriction}
   {:owl/onProperty :dol/participant, :owl/someValuesFrom [:dol/endurant], :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/part, :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/temporal-quality], :owl/onProperty :dol/has-quality, :rdf/type :owl/Restriction}
-  {:owl/allValuesFrom [:dol/perdurant], :owl/onProperty :dol/specific-constant-constituent, :rdf/type :owl/Restriction}],
- :resource/iri :dol/perdurant}
+  {:owl/onProperty :dol/specific-constant-constituent, :owl/allValuesFrom [:dol/perdurant], :rdf/type :owl/Restriction}]}
 ```
 
 ### `resource-ids`
@@ -202,7 +204,7 @@ Details about such schema can be found in the [Datahike schema docs](https://clj
 
 ```clojure
 (def app-schema
-  [#:db{:ident :resource/id        :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
+  [#:db{:ident :resource/iri       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
    #:db{:ident :resource/name      :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string} 
    #:db{:ident :source/short-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}

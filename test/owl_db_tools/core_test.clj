@@ -1,4 +1,4 @@
-(ns pdenno.owl-db-tools.core-test
+(ns owl-db-tools.core-test
   (:require
    [clojure.set           :as sets]
    [clojure.test :refer  [deftest is testing]]
@@ -6,9 +6,9 @@
    [datahike.api          :as d]
    [datahike.pull-api     :as dp]
    [edu.ucdenver.ccp.kr.jena.kb]
-   [pdenno.owl-db-tools.core :as owl]
-   [pdenno.owl-db-tools.util :as util]
-   [pdenno.owl-db-tools.resolvers :as res]
+   [owl-db-tools.core        :as owl]
+   [owl-db-tools.util        :as util]
+   [owl-db-tools.resolvers   :as res]
    [taoensso.timbre          :as log]))
 
 (util/config-log :info)

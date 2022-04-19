@@ -1,12 +1,12 @@
-(ns pdenno.owl-db-tools.resolvers-test
+(ns owl-db-tools.resolvers-test
   "Testing auto-created Pathom3 resolvers."
   (:require
    [clojure.test :refer  [deftest is testing]]
    [com.wsscode.pathom3.interface.eql :as p.eql]
    [datahike.api                  :as d]
    [datahike.pull-api             :as dp]
-   [pdenno.owl-db-tools.core      :as owl :refer [*conn*]]
-   [pdenno.owl-db-tools.resolvers :as res]))
+   [owl-db-tools.core      :as owl :refer [*conn*]]
+   [owl-db-tools.resolvers :as res]))
 
 (def big-cfg {:store {:backend :file :path (str (System/getenv "HOME") "/Databases/datahike-owl-db")}
               :keep-history? false

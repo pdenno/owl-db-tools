@@ -1,4 +1,4 @@
-(ns pdenno.owl-db-tools.resolvers
+(ns owl-db-tools.resolvers
   "Pathom3 resolvers to make accessing the DB easy."
   (:require
    [com.wsscode.misc.macros    :as pmacs]
@@ -8,8 +8,8 @@
    [com.wsscode.pathom3.interface.eql :as p.eql]
    [datahike.api               :as d]
    [datahike.pull-api          :as dp]
-   [pdenno.owl-db-tools.core   :as owl :refer [*conn*]]
-   [pdenno.owl-db-tools.util   :as util]))
+   [owl-db-tools.core   :as owl :refer [*conn*]]
+   [owl-db-tools.util   :as util]))
 
 (defn attr-info
   "Return a vector of maps containing :attr/id and :attr/type

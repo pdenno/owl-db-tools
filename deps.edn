@@ -9,25 +9,11 @@
  :aliases  {:test {:extra-paths ["test"]
                    :extra-deps  {lambdaisland/kaocha {:mvn/version "1.60.1029"}}}
 
-            :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
-                  :exec-fn hf.depstar/jar ; ToDo: Start using tools.build. "My build.clj wrapper makes it easier to switch."
-                  :exec-args {:jar "owl-db-tools-1.0.36.jar" ; See https://clojure.org/guides/tools_build#_source_library_jar_build
-                              :sync-pom true
-                              :version "1.0.36"
-                              :group-id "com.github.pdenno"
-                              :artifact-id "owl-db-tools"}}
-
-            :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
-                      :exec-fn deps-deploy.deps-deploy/deploy
-                      :exec-args {:installer :local
-                                  :artifact "owl-db-tools-1.0.36.jar"}}
-
             :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
-                                 :sign-releases? true
-                                 :artifact "owl-db-tools-1.0.36.jar"}}
+                                 :sign-releases? false
+                                 :artifact "owl-db-tools-1.0.42.jar"}}
             
-            ;; This for build.tools
             :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}}
                     :ns-default build}}}

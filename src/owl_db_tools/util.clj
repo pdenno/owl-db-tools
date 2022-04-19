@@ -1,4 +1,4 @@
-(ns pdenno.owl-db-tools.util
+(ns owl-db-tools.util
   (:require
    [datahike.api               :as d]
    [datahike.pull-api          :as dp]

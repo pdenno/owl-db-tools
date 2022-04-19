@@ -1,4 +1,4 @@
-(ns pdenno.owl-db-tools.core
+(ns owl-db-tools.core
   "Load the datahike (DH) database from Jena content; define pathom resolvers."
   (:require
    [clojure.string             :as str]
@@ -8,7 +8,7 @@
    [edu.ucdenver.ccp.kr.jena.kb]            ; https://www.cisa.gov/uscert/apache-log4j-vulnerability-guidance
    [edu.ucdenver.ccp.kr.rdf    :as rdf]     ; However, some work is needed (a ToDo) to avoid a configuration warning.
    [edu.ucdenver.ccp.kr.sparql :as sparql]  ; See https://logging.apache.org/log4j/1.2/faq.html#a3.5
-   [pdenno.owl-db-tools.util   :as util]
+   [owl-db-tools.util          :as util]
    [taoensso.timbre            :as log])
   (:import java.io.ByteArrayInputStream))
 
