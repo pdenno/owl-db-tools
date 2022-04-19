@@ -22,8 +22,8 @@
                 :lib lib
                 :version version
                 :basis basis
-                :src-dirs ["src/main"]})
-  (b/copy-dir {:src-dirs ["src/main"] :target-dir class-dir})
+                :src-dirs ["src"]})
+  (b/copy-dir {:src-dirs ["src"] :target-dir class-dir})
   (b/jar {:class-dir class-dir :jar-file jar-file}))
 
 ;;; :basis - required, used for :mvn/local-repo
