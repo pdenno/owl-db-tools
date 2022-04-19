@@ -41,7 +41,7 @@ the second is a local ontology in turtle syntax.
 
 The key of the outer map defines a shortname for the resource; it provides a namespace for unique identifiers used in the DB in lieu of the IRI string.
 The value of the outer map is a map providing the details about the source file to be read. The map keys are defined below.
-In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/ident = :dol/state.
+In the example, the resource http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state will be stored as an entity with :resource/iri = :dol/state.
 
 The following keywords are used in the sources:
  * `:uri` the URI of the OWL file to be read,
