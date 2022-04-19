@@ -21,8 +21,8 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-			 :keep-history? false
-			 :schema-flexibility :write})
+             :keep-history? false
+             :schema-flexibility :write})
 ```
 There are also examples in the test directory.
 
@@ -67,7 +67,7 @@ Examples of the use of sources can be found in the test directory.
 With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a connection objct to the database; it also sets the dynamic variable `*conn*` in the core namespace to this connection object. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. It can also be acquired directly from Datahike by calling `(datahike.api/connect <db-config-map-as-described-above>)`, which returns an atom containing the connection object.
 
 ```clojure
-(require '[pdenno.owl-db-tools.core :as owl])
+(require '[owl-db-tools.core :as owl])
 
 (owl/create-db! db-cfg onto-sources
 		:rebuild? true
@@ -113,7 +113,7 @@ The use of Pathom positions owl-db-tools to be used as a remote client.
 Pathom's documentation is quite good, so only a simple example is provided here.
 
 ```clojure
-(in-ns 'pdenno.owl-db-tools.resolvers)
+(in-ns 'owl-db-tools.resolvers)
 
 (def owl-db (register-resolvers! *conn*)) ; Create the basic attribute resolvers for your database.
 
