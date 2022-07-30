@@ -2,7 +2,7 @@
   "Testing auto-created Pathom3 resolvers."
   (:require
    [clojure.test :refer  [deftest is testing]]
-   [com.wsscode.pathom3.interface.eql :as p.eql]
+   ;[com.wsscode.pathom3.interface.eql :as p.eql]
    [datahike.api                  :as d]
    [datahike.pull-api             :as dp]
    [owl-db-tools.core      :as owl :refer [*conn*]]
@@ -50,6 +50,10 @@
    [(str "Any entity e1 is mapped to any other entity e2 when one of the concepts that classify e1, "
          "e.g. c1, is contextually augmented by another concept c2 from either the same description "
          "as c1 (metonymy), or from another description (metaphor).")]})
+
+(deftest datahike-queries
+  (testing "That direct queries of the database work."
+    (is (= 
 
 (deftest resolvers-work
   (testing "Testing that resolvers work"

@@ -1,13 +1,13 @@
 {:paths ["src" "resources"]
  :deps {com.taoensso/timbre           {:mvn/version "5.2.1"}
         edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
-        com.wsscode/pathom3           {:mvn/version "2022.03.17-alpha"}
-        io.replikativ/datahike        {:mvn/version "0.4.1491"}
+        com.wsscode/pathom3           {:mvn/version "2022.07.08-alpha"}
+        io.replikativ/datahike        {:mvn/version "0.4.1491"} #_{:mvn/version "0.5.1507"} ; If/when ontologydesignpatterns.org is back
         org.clojure/clojure           {:mvn/version "1.11.1"}
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
 
  :aliases  {:test {:extra-paths ["test"]
-                   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.60.1029"}}}
+                   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.69.1069"}}}
 
             :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
@@ -15,5 +15,5 @@
                                  :sign-releases? false
                                  :artifact "owl-db-tools-1.0.42.jar"}}
             
-            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "7d40500"}}
+            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}}
                     :ns-default build}}}

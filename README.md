@@ -4,6 +4,8 @@ This library uses Clojure-wrapped [Apache Jena](https://jena.apache.org/) to rea
 into a [Datahike](https://datahike.io/) database.
 
 The library is still young, though its basic features have been tested.
+NOTE: Currently, however, there is a problem in this document: the site where the ontology used in the examples
+used to reside, [http://www.ontologydesignpatterns.org](http://ontologydesignpatterns.org/wiki/Main_Page), cannot be reached.
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.pdenno/owl-db-tools.svg)](https://clojars.org/com.github.pdenno/owl-db-tools)
 
@@ -97,6 +99,8 @@ A typical the Datahike query is depicted below paired with filter to get all the
 
 ```clojure
 (require '[datahike.api :as d])
+
+(def conn (d/connect db-cfg))
 
 (->> (d/q '[:find [?v ...] :where [_ :resource/iri ?v]] @conn)
 	 (filter #(= "dol" (namespace %))) sort)

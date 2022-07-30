@@ -4,7 +4,7 @@
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
-   [datahike.pull-api     :as dp]
+   ;[datahike.pull-api     :as dp]
    [edu.ucdenver.ccp.kr.jena.kb]
    [owl-db-tools.core        :as owl]
    [owl-db-tools.util        :as util]
