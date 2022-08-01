@@ -1,0 +1,561 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns:tem="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#"
+    xmlns:dol="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#"
+    xmlns="http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl#"
+    xmlns:edns="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:daml="http://www.daml.org/2001/03/daml+oil#"
+    xmlns:spa="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#"
+  xml:base="http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"/>
+    <owl:imports rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"/>
+    <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >397</owl:versionInfo>
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >Imports: Information</rdfs:comment>
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >An ontology of collections, collectives, social units, and systems, plugins to DnS. These are placeholders for a more ambitious ontology of basic entities from the social world. OWL engineering by Aldo Gangemi.</rdfs:comment>
+    <owl:imports>
+      <owl:Ontology rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"/>
+    </owl:imports>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#physical-phenomenon"/>
+  <owl:Class rdf:ID="system-as-description">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The descriptive, unifying aspect of a system (usually it includes at least a design, or project, plan, etc.).</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#description"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfied-by"/>
+        </owl:onProperty>
+        <owl:allValuesFrom>
+          <owl:Class rdf:ID="system-as-situation"/>
+        </owl:allValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#time-interval"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#goal"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#relevant-part"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#desire"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#abstract-quality"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collection"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#method"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#role"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#physical-realization"/>
+  <owl:Class rdf:ID="system-implementation-workflow">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of how to implement a system-as-artifact.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#has-in-scope"/>
+        </owl:onProperty>
+        <owl:allValuesFrom>
+          <owl:Class rdf:ID="working-system-situation"/>
+        </owl:allValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="system-production-workflow"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#proposition"/>
+  <owl:Class rdf:ID="system-design">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of a system from the design viewpoint (how it is structured, but also including possible aesthetic or functional descriptions that are not strictly related to the functionalities to be supported by the system).</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#system-as-description"/>
+  </owl:Class>
+  <owl:Class rdf:about="#system-production-workflow">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of how a system is produced.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfied-by"/>
+        <owl:allValuesFrom>
+          <owl:Class rdf:ID="production-workflow-execution"/>
+        </owl:allValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#has-in-scope"/>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="#system-as-situation"/>
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="workflow"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#symmetric-role"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporal-location_q"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#activity"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#practice"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#relation"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agentive-social-object">
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-object"/>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agent"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collective"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#gestalt"/>
+  <owl:Class rdf:ID="design-object-materialization">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >A situation in which an object exists that has been produced according to a system design specification.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="#system-as-situation"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfies"/>
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="#system-design"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#in-scope-of"/>
+        </owl:onProperty>
+        <owl:someValuesFrom>
+          <owl:Class rdf:ID="design-specification-workflow"/>
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#state"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agentive-figure">
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agentive-social-object"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#regulation"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#cognitive-event"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#spatio-temporal-region"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#indicator"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#quality-space"/>
+  <owl:Class rdf:about="#workflow">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >A plan describing a team's or organization's objectives, tasks, roles, and parameters. Ay least two roles and one task, or one role and two tasks must be defined.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#adopted-by"/>
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agentive-figure"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#non-physical-endurant"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#material-artifact"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-description"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#logical-role"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#non-agentive-physical-object"/>
+  <owl:Class rdf:about="#working-system-situation">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The situation in which a working system interacts with its environment according to its functionality description.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="#system-as-situation"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfies"/>
+        <owl:someValuesFrom>
+          <owl:Class rdf:ID="system-functionality"/>
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#in-scope-of"/>
+        <owl:someValuesFrom rdf:resource="#system-implementation-workflow"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#modal-description"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#event"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#spatio-temporal-particular"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#flux"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#task"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#life-cycle"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-role"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#objective"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#quality"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#space-region"/>
+  <owl:Class rdf:about="#production-workflow-execution">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >A situation satisfying the production workflow of a system.</rdfs:comment>
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:intersectionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation"/>
+          <owl:Restriction>
+            <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfies"/>
+            <owl:someValuesFrom rdf:resource="#system-production-workflow"/>
+          </owl:Restriction>
+        </owl:intersectionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#information-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#cognitive-modal-description"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#process"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#spatial-location_q"/>
+  <owl:Class rdf:about="#system-as-situation">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The realization aspect of a system, satisfying the descriptive aspect.If the descriptive part only includes a design, it can be a situation in which that design has been realized (e.g. consisting essentially of a system-as-artifact as a design object).If the descriptive part includes a project, it can be a workflow situation resulting in the production of e.g. a system-as-artifact.If the descriptive part includes a set of instructions, it can be a situation in which e.g. a system-as-artifact interacts with the environment effectively (according to some evaluation criteria).</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#satisfies"/>
+        <owl:someValuesFrom rdf:resource="#system-as-description"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporal-region"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-region"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#path"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#stative"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#status"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#action"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agent-driven-role"/>
+  <owl:Class rdf:ID="functionality-specification-workflow">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of how to produce a functionality specification.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#has-in-scope"/>
+        <owl:allValuesFrom rdf:resource="#working-system-situation"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="#system-production-workflow"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#region"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporal-quality"/>
+  <owl:Class rdf:about="#system-functionality">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of a system from the functional viewpoint (how it works).</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#system-as-description"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#rational-agent"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#project"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#theory"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#abstract"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#rational-physical-object"/>
+  <owl:Class rdf:ID="system-as-artifact">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >A material artifact whose proper parts ('components') are physical objects, members of a collection unified by a project or plan.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#proper-part"/>
+        </owl:onProperty>
+        <owl:allValuesFrom>
+          <owl:Class>
+            <owl:intersectionOf rdf:parseType="Collection">
+              <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-object"/>
+              <owl:Restriction>
+                <owl:onProperty>
+                  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#member-of"/>
+                </owl:onProperty>
+                <owl:someValuesFrom>
+                  <owl:Class>
+                    <owl:intersectionOf rdf:parseType="Collection">
+                      <owl:Restriction>
+                        <owl:onProperty>
+                          <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unified-by"/>
+                        </owl:onProperty>
+                        <owl:someValuesFrom rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+                      </owl:Restriction>
+                      <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collection"/>
+                    </owl:intersectionOf>
+                  </owl:Class>
+                </owl:someValuesFrom>
+              </owl:Restriction>
+            </owl:intersectionOf>
+          </owl:Class>
+        </owl:allValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#material-artifact"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-relationship"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#cognitive-state"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#amount-of-matter"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#figure"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#reconstructed-flux"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#concept"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#course"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#dependent-place"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#technique"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#non-physical-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#constitutive-description"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#non-agentive-social-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#abstract-region"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#information-encoding-system"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#set"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-quality"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#quale"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#particular"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#perdurant"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#endurant"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#non-agentive-figure"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#accomplishment"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#parameter"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#arbitrary-sum"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-endurant"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#communication-event"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#agentive-physical-object"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#achievement"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#feature"/>
+  <owl:Class rdf:about="#design-specification-workflow">
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >The description of how to produce a design specification.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#has-in-scope"/>
+        <owl:allValuesFrom rdf:resource="#design-object-materialization"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="#system-production-workflow"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#description-role"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#phenomenon"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#acted-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#component"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#spatio-temporally-present-at"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#boundary"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#starts"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporal-relation-i"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#total-temporary-participant-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#origin-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#total-temporary-participant"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#life-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#participant-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#sibling-part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#q-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-proper-part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#exploits"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#immediate-relation"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#covers"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#d-used-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#about"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#optionally-used-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#r-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#component-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#parametrizes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plays"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#required-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#parametrized-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generic-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#e-temporal-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#requisite-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#has-t-quality"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#weak-connection"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#p-sat-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#characterized-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-atomic-part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporally-coincides"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#attitude-towards"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#p-spatial-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#follows"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#constant-participant-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#interpreted-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#material-place"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#characterizes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#present-at"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#descriptive-origin-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#mediated-relation"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#involved-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#instantiates"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#time-of-q-presence-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporal-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expands"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#time-of-presence-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#realized-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#q-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#r-sat"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#intensionally-references"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#defines"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#right-task-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#abstract-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#boundary-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#aboutness-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#met-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#regulated-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#involves"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#abstract-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#life"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#p-spatial-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#meets"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporally-includes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#c-sat"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#created-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#requires"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#setting"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporally-overlaps"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#co-participates-with"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-participant-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#interprets"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#deputes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#refines"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporally-connected"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#exact-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expects"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#metaphorically-played-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#valued-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#identity-c"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#exploited-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#total-constant-participant-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#started-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expressed-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#personifies"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#internally-represented-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#origin"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#direct-successor"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#specific-constant-constituent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#precedes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#d-spatial-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#metaphorically-plays"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#temporary-component"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#realizes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#used-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#value-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation-place-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#defined-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#concluded-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#instantiated-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#approximate-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#regulates"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#overlaps"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#strong-connection"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expanded-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#specific-constant-constituent-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#classifies"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#classified-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#predecessor"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#intensionally-referenced-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#p-sat"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#identity-n"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#spatial-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#c-sat-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#partly-compresent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#ordered-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#q-present-at"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#concludes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#sequences"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expected-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#specialized-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#exact-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#functionally-unified-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#deputed-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#referenced-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#immediate-relation-i"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#uses"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#played-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#obliged-to"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#situation-place"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporal-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#successor"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#temporary-component-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#t-inherent-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#acts-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#internally-represents"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#right-to"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#descriptive-origin"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporal-relation"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#creates"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#participant-place"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#place"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#specifically-constantly-dependent-on"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#modal-target-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#participant"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#admitted-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#inherent-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expected-setting-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#mediated-relation-i"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#host"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#obligation-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generic-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#refined-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#sequenced-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#host-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#makes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#mereologically-coincides"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unifies"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#personified-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#physical-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#covered-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#specific-constant-dependent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generically-dependent-on"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#orders"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#setting-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#has-quality"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#r-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#empowered-to"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#member"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#d-spatial-location"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#material-place-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#e-temporal-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expected-setting"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-participant"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#approximate-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#specializes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#proper-part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#optionally-uses"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generic-dependent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#empowered-for"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#total-constant-participant"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-atomic-part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#atomic-part-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#temporally-included-in"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#attitude-target-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#temporary-proper-part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generic-constituent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#spatial-location-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#method-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#quale-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#descriptive-place"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#atomic-part"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#requisite"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#extensionally-equivalent"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#functionally-unifies"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#adopts"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#generic-constituent-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#expresses"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#modal-target"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#descriptive-place-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#d-uses"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#admits"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#has-quale"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#has-method"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#constant-participant"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#made-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#r-sat-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#participant-place-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#direct-predecessor"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#place-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#spatio-temporal-presence-of"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#references"/>
+</rdf:RDF>

@@ -33,14 +33,32 @@
    "model"  {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
    "ops"    {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}})
 
-;;; This establishes the DB and sets *conn*. It takes a minute or two.
-(defn make-big-db [cfg]
+(defn make-big-db
+  "This establishes the DB and sets *conn*. It takes a minute or two."
+  [cfg]
   (when (d/database-exists? cfg) (d/delete-database cfg))
   (owl/create-db!
    cfg
    big-sources
    :rebuild? true
    :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))
+
+(defn save-big-db-files
+  "I used this one time (arg sources = big sources) to copy the DLP files to a local directory."
+  [sources]
+  (as-> sources ?s
+       (reduce-kv (fn [m k v]
+                    (if (or (->> v :uri (re-matches #".*nist\.gov.*"))
+                            (-> v :ref-only?))
+                      m
+                      (assoc m (str k ".owl") (:uri v))))
+                  {} ?s)
+       (doall (reduce-kv (fn [_m k v]
+                           (->> v
+                                slurp
+                                (spit (str "data/DLP/" k))))
+                         {}
+                         ?s))))
 
 ;;; Run the following once to establish the DB. It might take a few minutes.
 ;;; (make-big-db big-cfg)
@@ -52,8 +70,7 @@
          "as c1 (metonymy), or from another description (metaphor).")]})
 
 (deftest datahike-queries
-  (testing "That direct queries of the database work."
-    (is (= 
+  (testing "That direct queries of the database work."))
 
 (deftest resolvers-work
   (testing "Testing that resolvers work"

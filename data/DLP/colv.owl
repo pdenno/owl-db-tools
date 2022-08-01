@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rdf:RDF [
+  <!ENTITY Collectives "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl">
+  <!ENTITY Collections "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl">
+  <!ENTITY InformationObjects "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl">
+  <!ENTITY owl "http://www.w3.org/2002/07/owl#">
+  <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#">
+  <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
+]>
+<rdf:RDF xml:base="&Collectives;"
+         xmlns:Collections="&Collections;"
+         xmlns:owl="&owl;"
+         xmlns:rdf="&rdf;"
+         xmlns:rdfs="&rdfs;">
+
+<!-- Ontology Information -->
+  <owl:Ontology rdf:about="">
+    <rdfs:comment rdf:datatype="&xsd;string">An ontology of collections, collectives, social units, and systems, plugins to DnS. These are placeholders for a more ambitious ontology of basic entities from the social world. OWL engineering by Aldo Gangemi.</rdfs:comment>
+    <rdfs:comment rdf:datatype="&xsd;string">Imports: Information</rdfs:comment>
+    <owl:imports>
+      <owl:Ontology rdf:about="&Collections;"/>
+    </owl:imports>
+    <owl:versionInfo rdf:datatype="&xsd;string">397</owl:versionInfo>
+  </owl:Ontology>
+
+<!-- Classes -->
+  <owl:Class rdf:about="#biological-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">Biological collectives are type-based collectives that are *covered* by roles typical of the biological world.They can be divided into various kinds (genetic, taxonomic, epidemiological, etc.).Biological properties produce either crisp or fuzzy/probabilistic types.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#type-based-collective"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="#ecological-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">An organized collective that receives its organization from the characterizing roles of social interation between organisms in a niche.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#organized-collective"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="#genetic-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">A biological collective covered by genetic roles (whose members are identified by means of the genetic properties ascribed to them).</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#biological-collective"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="#intentional-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">We use the presence and structure of a unifying plan in order to characterize kinds of collectives. A preliminary consideration is that plan unification can have two senses.The first one only takes into account the action schemas executed by the members, who do not necessarily interact in a 'global' way. In other words, the roles played by members cover the collective, because they are (dispositionally) played by each member.The second sense is richer, and assumes that the unifying (maximal) plan (d-)uses roles that characterize (are played by some members, and related between them in a typical way) the collective.The first sense of plan unification is applicable to a subclass of simple collectives that we call here 'simple-planned-collectives'.The second sense of plan unification applies to intentional collectives proper.An intentional collective can be said to act intentionally because its members act, and because it is unified by a plan that is conceived by some rational agent. Therefore, there is nothing special in a collective being intentional: it is just a matter of having a plan and agentive members playing its characterizing roles. What is special is the distinction between the diversified ways of acting collectively (see subclasses).</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#organized-collective"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unified-by"/>
+        <owl:someValuesFrom>
+          <owl:Class>
+            <owl:intersectionOf rdf:parseType="Collection">
+              <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+              <owl:Restriction>
+                <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#d-uses"/>
+                <owl:someValuesFrom>
+                  <owl:Restriction>
+                    <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#characterizes"/>
+                    <owl:someValuesFrom rdf:resource="#intentional-collective"/>
+                  </owl:Restriction>
+                </owl:someValuesFrom>
+              </owl:Restriction>
+            </owl:intersectionOf>
+          </owl:Class>
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="#organized-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">An organized collection with only agents as members.</rdfs:comment>
+    <owl:intersectionOf rdf:parseType="Collection">
+      <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#organized-collection"/>
+      <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collective"/>
+    </owl:intersectionOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="#simple-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">A simple collection with only agents as members.</rdfs:comment>
+    <owl:intersectionOf rdf:parseType="Collection">
+      <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#simple-collection"/>
+      <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collective"/>
+      <owl:Restriction>
+        <owl:allValuesFrom>
+          <owl:Class>
+            <owl:complementOf>
+              <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                  <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+                  <owl:Restriction>
+                    <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#d-uses"/>
+                    <owl:someValuesFrom>
+                      <owl:Restriction>
+                        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#characterizes"/>
+                        <owl:someValuesFrom rdf:resource="#intentional-collective"/>
+                      </owl:Restriction>
+                    </owl:someValuesFrom>
+                  </owl:Restriction>
+                </owl:intersectionOf>
+              </owl:Class>
+            </owl:complementOf>
+          </owl:Class>
+        </owl:allValuesFrom>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unified-by"/>
+      </owl:Restriction>
+    </owl:intersectionOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="#simple-planned-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">We use the presence and structure of a unifying plan in order to characterize kinds of collectives. A preliminary consideration is that plan unification can have two senses.The first one only takes into account the action schemas executed by the members, who do not necessarily interact in a global way. In other words, the roles played by members cover the collective, because they are (dispositionally) played by each member.The second sense is richer, and assumes that the unifying (maximal) plan (d-)uses roles that characterize the collective.The first sense of plan unification is applicable to a subclass of simple collectives that we call here 'simple-planned-collectives'.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#simple-collective"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="#social-type-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">Social type-based collectives are type-based collectives that are *covered* by roles typical of the social world.Social collectives are usually based on action schemas (practices, rather than plans, which are typical of intentional collectives).They can be distinguished into neighborhood, geographic (at various granularities), ethnic, linguistic, commercial, industrial, scientific, political, religious, institutional, administrative, professional, sportive, interest-based, stylistic, devotional, etc.WordNet contains an impressive set of social-type-based-collectives, which are encoded in the lexicon.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#type-based-collective"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unified-by"/>
+        <owl:someValuesFrom>
+          <owl:Class>
+            <owl:unionOf rdf:parseType="Collection">
+              <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#practice"/>
+              <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-relationship"/>
+            </owl:unionOf>
+          </owl:Class>
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#covered-by"/>
+        <owl:someValuesFrom rdf:resource="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-role"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="#taxonomic-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">A simple collective covered by roles corresponding to natural science properties ascribed to members.</rdfs:comment>
+    <owl:intersectionOf rdf:parseType="Collection">
+      <rdf:Description rdf:about="#biological-collective"/>
+      <rdf:Description rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#taxonomic-collection"/>
+    </owl:intersectionOf>
+  </owl:Class>
+
+  <owl:Class rdf:about="#type-based-collective">
+    <rdfs:comment rdf:datatype="&xsd;string">Collectives can be classified according to different property kinds. The first one is the type of members (e.g. physical persons, boys, cows, left-handers, etc.). Types are used in traditional classifications. For example, biological collectives can be distinguished from social collectives, based on the (biological or social) properties ascribed to members.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#simple-collective"/>
+  </owl:Class>
+
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#organized-collection"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#simple-collection"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#taxonomic-collection"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#collective"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#plan"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#practice"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-relationship"/>
+  <owl:Class rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#social-role"/>
+
+<!-- Annotation Properties -->
+  <owl:AnnotationProperty rdf:about="&rdfs;comment"/>
+  <owl:AnnotationProperty rdf:about="&owl;versionInfo"/>
+
+<!-- Object Properties -->
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#characterizes"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#covered-by"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#d-uses"/>
+  <owl:ObjectProperty rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#unified-by"/>
+</rdf:RDF>

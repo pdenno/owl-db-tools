@@ -277,6 +277,7 @@
             {}
             starters)))
 
+;;; ToDo: See zotero-tools/util.cljs for for .cljc style.
 (defn learn-type
   "Return the :db/valueType for the data."
   [prop examples]

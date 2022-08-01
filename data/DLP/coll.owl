@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY p3 "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#" >
+    <!ENTITY p1 "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#" >
+    <!ENTITY p5 "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#" >
+    <!ENTITY p6 "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#" >
+    <!ENTITY p2 "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl#" >
+    <!ENTITY p4 "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl#" >
+]>
+
+
+<rdf:RDF xmlns="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#"
+     xml:base="http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"
+     xmlns:p3="http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl#"
+     xmlns:p6="http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl#"
+     xmlns:p1="http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:p4="http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl#"
+     xmlns:p5="http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl#"
+     xmlns:p2="http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#">
+    <owl:Ontology rdf:about="">
+        <owl:versionInfo rdf:datatype="&xsd;string">397</owl:versionInfo>
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >An ontology of collections, collectives, social units, and systems, plugins to DnS. These are placeholders for a more ambitious ontology of basic entities from the social world. OWL engineering by Aldo Gangemi.</rdfs:comment>
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >Imports: Information</rdfs:comment>
+        <owl:imports>
+            <owl:Ontology rdf:about="http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"/>
+        </owl:imports>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //   OWL Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#information-collection -->
+
+    <owl:Class rdf:about="#information-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A collection of texts.</rdfs:comment>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="&p1;member"/>
+                <owl:minCardinality rdf:datatype="&xsd;nonNegativeInteger">2</owl:minCardinality>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Class rdf:about="#non-physical-collection"/>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="&p1;member"/>
+                <owl:allValuesFrom rdf:resource="&p2;text"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#non-physical-collection -->
+
+    <owl:Class rdf:about="#non-physical-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A collection of non-physical objects that is characterized by a conventional or emergent property, e.g. a corpus, a legal body, etc.A non-physical collection only has non-physical endurants as members.</rdfs:comment>
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;member"/>
+                        <owl:minCardinality rdf:datatype="&xsd;nonNegativeInteger">2</owl:minCardinality>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;member"/>
+                        <owl:allValuesFrom rdf:resource="&p3;non-physical-object"/>
+                    </owl:Restriction>
+                    <owl:Class rdf:about="&p1;collection"/>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#organized-collection -->
+
+    <owl:Class rdf:about="#organized-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >Organized collections introduce a different unity criterion for collections. They can be conceived as characterized by further roles played by some (or all) members of the collection, and related among them through the social objects (figures, descriptions, collections) that either use or depute or are covered by them.</rdfs:comment>
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;characterized-by"/>
+                        <owl:minCardinality rdf:datatype="&xsd;nonNegativeInteger">2</owl:minCardinality>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;characterized-by"/>
+                        <owl:someValuesFrom rdf:resource="&p1;role"/>
+                    </owl:Restriction>
+                    <owl:Class rdf:about="&p1;collection"/>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#parametrized-collection -->
+
+    <owl:Class rdf:about="#parametrized-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A type of simple collections are parametrized collections, whose members must have a quality constrained by some parameter that is a requisite of their covering role(s).For example, a crowd of people has members that have spatial positions in a range that makes them proximal (a condition traditionally used to distinguish so-called aggregates (King 2004)).On the other hand, if positions are reciprocally relevant (as, for instance, in a living chess setting) according to multiple roles defined by some plan or design, the collection becomes organized.</rdfs:comment>
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;member"/>
+                        <owl:allValuesFrom>
+                            <owl:Restriction>
+                                <owl:onProperty rdf:resource="&p3;generic-location"/>
+                                <owl:someValuesFrom>
+                                    <owl:Restriction>
+                                        <owl:onProperty rdf:resource="&p1;value-for"/>
+                                        <owl:someValuesFrom>
+                                            <owl:Restriction>
+                                                <owl:onProperty rdf:resource="&p1;requisite-for"/>
+                                                <owl:someValuesFrom rdf:resource="&p1;role"/>
+                                            </owl:Restriction>
+                                        </owl:someValuesFrom>
+                                    </owl:Restriction>
+                                </owl:someValuesFrom>
+                            </owl:Restriction>
+                        </owl:allValuesFrom>
+                    </owl:Restriction>
+                    <owl:Class rdf:about="#simple-collection"/>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#physical-plurality -->
+
+    <owl:Class rdf:about="#physical-plurality">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >a.k.a. unitary collection in D18. The physical counterpart (realization) of a collection. A collection (see) is characterized by a conventional or emergent property. Physical pluralities have as *proper parts* only physical objects that are *members* of a same collection.</rdfs:comment>
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p3;proper-part"/>
+                        <owl:allValuesFrom>
+                            <owl:Restriction>
+                                <owl:onProperty rdf:resource="&p1;member-of"/>
+                                <owl:cardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:cardinality>
+                            </owl:Restriction>
+                        </owl:allValuesFrom>
+                    </owl:Restriction>
+                    <owl:Class rdf:about="&p3;physical-object"/>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#simple-collection -->
+
+    <owl:Class rdf:about="#simple-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A simple collection (for instance, a collection of saxophones, or a mass of lymphocytes ) is a collection having only covering roles.</rdfs:comment>
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:intersectionOf rdf:parseType="Collection">
+                    <owl:Class rdf:about="&p1;collection"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="&p1;characterized-by"/>
+                        <owl:allValuesFrom>
+                            <owl:Class>
+                                <owl:complementOf>
+                                    <owl:Class rdf:about="&p1;role"/>
+                                </owl:complementOf>
+                            </owl:Class>
+                        </owl:allValuesFrom>
+                    </owl:Restriction>
+                </owl:intersectionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#taxonomic-collection -->
+
+    <owl:Class rdf:about="#taxonomic-collection">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A simple collection covered by roles corresponding to natural science properties ascribed to members.</rdfs:comment>
+        <rdfs:subClassOf>
+            <owl:Class rdf:about="#simple-collection"/>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- Class: http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl#text-repository -->
+
+    <owl:Class rdf:about="#text-repository">
+        <rdfs:comment rdf:datatype="&xsd;string"
+            >A collection having only texts as members.</rdfs:comment>
+        <rdfs:subClassOf>
+            <owl:Class rdf:about="#information-collection"/>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    //   OWL Axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////
+     -->
+
+    <owl:Class rdf:about="#organized-collection">
+        <owl:disjointWith>
+            <owl:Class rdf:about="#simple-collection"/>
+        </owl:disjointWith>
+    </owl:Class>
+    <owl:Class rdf:about="#simple-collection">
+        <owl:disjointWith>
+            <owl:Class rdf:about="#organized-collection"/>
+        </owl:disjointWith>
+    </owl:Class>
+</rdf:RDF>

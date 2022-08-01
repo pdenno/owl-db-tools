@@ -4,8 +4,6 @@ This library uses Clojure-wrapped [Apache Jena](https://jena.apache.org/) to rea
 into a [Datahike](https://datahike.io/) database.
 
 The library is still young, though its basic features have been tested.
-NOTE: Currently, however, there is a problem in this document: the site where the ontology used in the examples
-used to reside, [http://www.ontologydesignpatterns.org](http://ontologydesignpatterns.org/wiki/Main_Page), cannot be reached.
 
 [![Clojars Project](https://img.shields.io/clojars/v/com.github.pdenno/owl-db-tools.svg)](https://clojars.org/com.github.pdenno/owl-db-tools)
 
@@ -23,8 +21,8 @@ The example shown here writes a persistent file-based DB to `/tmp/datahike-owl-d
 
 ```clojure
 (def db-cfg {:store {:backend :file :path "/tmp/datahike-owl-db"
-             :keep-history? false
-             :schema-flexibility :write})
+			 :keep-history? false
+			 :schema-flexibility :write})
 ```
 There are also examples in the test directory.
 
@@ -129,20 +127,20 @@ Pathom's documentation is quite good, so only a simple example is provided here.
 	 :rdfs/domain [:dol/particular],
 	 :rdfs/subPropertyOf :dol/mediated-relation}}
 ```
-There is also a Pathom resolver for obtaining the names of all the RDF resource in the database. 
+There is also a Pathom resolver for obtaining the names of all the RDF resource in the database.
 This resolver provides an optional [Pathom parameter](https://pathom3.wsscode.com/docs/resolvers/#parameters) that allows
 filtering, for example, to retrieve all the names in a given namespace:
 
 ```clojure
 (owl-db '[(:ontology/context {:filter-by {:attr :resource/namespace :val "dol"}})])
 ```
-The `:filter-by` parameter may be a vector of such `{:attr ... :val ...}` maps, but keep in mind that many 
+The `:filter-by` parameter may be a vector of such `{:attr ... :val ...}` maps, but keep in mind that many
 resource attributes are references (to accommodate expressions). Thus, the following won't work:
 
 
 ```clojure
-(owl-db '[(:owl/db {:filter-by [{:attr :resource/namespace :val "dol"}  ; Won't work. 
-                                {:attr :rdf/type :val :owl/Class}]})])  ; :rdf/type is a DB reference, not a value such as :owl/Class.
+(owl-db '[(:owl/db {:filter-by [{:attr :resource/namespace :val "dol"}  ; Won't work.
+								{:attr :rdf/type :val :owl/Class}]})])  ; :rdf/type is a DB reference, not a value such as :owl/Class.
 
 ```
 For such activities, it is better to use the Datahike interfaces.
@@ -210,7 +208,7 @@ Details about such schema can be found in the [Datahike schema docs](https://clj
 (def app-schema
   [#:db{:ident :resource/iri       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
    #:db{:ident :resource/name      :cardinality :db.cardinality/one :valueType :db.type/string}
-   #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string} 
+   #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :source/short-name  :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
    #:db{:ident :source/long-name   :cardinality :db.cardinality/one :valueType :db.type/string  :unique :db.unique/identity}
    #:db{:ident :source/loaded?     :cardinality :db.cardinality/one :valueType :db.type/boolean}
@@ -264,6 +262,11 @@ Details about such schema can be found in the [Datahike schema docs](https://clj
   [#:db{:ident :rdf/type      :cardinality :db.cardinality/one :valueType :db.type/ref} ; boxed because not always a keyword.
    #:db{:ident :rdf/parseType :cardinality :db.cardinality/one :valueType :db.type/keyword}])
 ```
+## Notes on test cases
+
+Some of the tests use the DOLCE Lite Plus (DLP) ontology, found at
+[http://www.ontologydesignpatterns.org](http://ontologydesignpatterns.org/wiki/Main_Page).
+A copy of that data can be found in data/DLP directory of this project.
 
 ## To Do
 
