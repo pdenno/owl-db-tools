@@ -4,6 +4,7 @@
    [datahike.pull-api          :as dp]
    [taoensso.timbre :as log]))
 
+
 (defn no-host&time-output-fn
   "I don't want :hostname_ and :timestamp_ in the log output."
   ([data]       (taoensso.timbre/default-output-fn nil  (dissoc data :hostname_ :timestamp_)))

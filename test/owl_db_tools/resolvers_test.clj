@@ -1,38 +1,71 @@
 (ns owl-db-tools.resolvers-test
-  "Testing auto-created Pathom3 resolvers."
+  "Testing auto-created Pathom3 resolvers Note comment below about the need to build the DB before testing."
   (:require
+   [arachne.aristotle             :as aa]
+   [arachne.aristotle.graph       :as g]
+   [arachne.aristotle.query       :as q]
+   [arachne.aristotle.registry    :as reg]
+   [clojure.pprint                :refer [cl-format pprint]]
+   [clojure.edn                   :as edn]
+   [clojure.java.io               :as io]
    [clojure.test :refer  [deftest is testing]]
-   ;[com.wsscode.pathom3.interface.eql :as p.eql]
+   ;;[com.wsscode.pathom3.interface.eql :as p.eql]
+   ;;[edu.ucdenver.ccp.kr.jena.kb] ; This was added in 2024, following the pattern in core_test, that was before 2024.
    [datahike.api                  :as d]
    [datahike.pull-api             :as dp]
    [owl-db-tools.core      :as owl :refer [*conn*]]
-   [owl-db-tools.resolvers :as res]))
+   [owl-db-tools.resolvers :as res]
+   [taoensso.telemere       :as tel :refer [log!]]))
+
+;;; THIS is the namespace I am hanging out in recently.
+(def ^:diag diag (atom nil))
+
+(def alias? (atom (-> (ns-aliases *ns*) keys set)))
+
+(defn ^:diag ns-start-over!
+  "This one has been useful. If you get an error evaluate this ns, (the declaration above) run this and try again."
+  []
+  (map (partial ns-unalias *ns*) (keys (ns-aliases *ns*))))
+
+(defn ^:diag remove-alias
+  "This one has NOT been useful!"
+  [al ns-sym]
+  (swap! alias? (fn [val] (->> val (remove #(= % al)) set)))
+  (ns-unalias (find-ns ns-sym) al))
+
+(defn safe-alias
+  [al ns-sym]
+  (when (and (not (@alias? al))
+             (find-ns ns-sym))
+    (alias al ns-sym)))
+
+(defn ^:diag ns-setup!
+  "Use this to setup useful aliases for working in this NS."
+  []
+  (ns-start-over!)
+  (reset! alias? (-> (ns-aliases *ns*) keys set))
+  (safe-alias 's      'clojure.spec.alpha)
+  (safe-alias 'io     'clojure.java.io)
+  (safe-alias 'str    'clojure.string)
+  (safe-alias 'd      'datahike.api)
+  (safe-alias 'dp     'datahike.pull-api)
+  (safe-alias 'core   'owl-db-tools.core)
+  (safe-alias 'res    'owl-db-tools.resolvers)
+  (safe-alias 'util   'owl-db-tools.util))
+
+;;; In order to run these tests, first time, it is necessary to create the directory below and run make-big-db, also below.
+;;; (make-big-db big-cfg)
 
 (def big-cfg {:store {:backend :file :path (str (System/getenv "HOME") "/Databases/datahike-owl-db")}
               :keep-history? false
               :schema-flexibility :write})
 
-(def big-sources
-  {"cause"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl"  :ref-only? true},
-   "coll"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"},
-   "colv"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl"},
-   "common" {:uri "http://www.ontologydesignpatterns.org/ont/dlp/CommonSenseMapping.owl"},
-   "dlp"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DLP_397.owl"},
-   "dol"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
-   "edns"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
-   "fpar"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
-   "info"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
-   "modal"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
-   "pla"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
-   "sem"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
-   "space"  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
-   "soc"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
-   "sys"    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl"},
-   "time"   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"},
+(def big-sources (-> "project-ontologies.edn" io/resource slurp edn/read-string))
 
-   "model"  {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
-   "ops"    {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}})
+;;;================================== aristotle stuff =======================================
+;;;================================== end aristotle stuff =================================
 
+;;; (make-big-db big-cfg)
 (defn make-big-db
   "This establishes the DB and sets *conn*. It takes a minute or two."
   [cfg]
@@ -69,7 +102,7 @@
          "e.g. c1, is contextually augmented by another concept c2 from either the same description "
          "as c1 (metonymy), or from another description (metaphor).")]})
 
-(deftest datahike-queries
+#_(deftest datahike-queries
   (testing "That direct queries of the database work."))
 
 (deftest resolvers-work
@@ -85,3 +118,11 @@
         (is (= resolver-answer                 (res-2 nil {:resource/iri :info/mapped-to})))
         (is (= resolver-answer (get (test-db [{[:resource/iri :info/mapped-to] [:rdfs/comment]}])
                                     [:resource/iri :info/mapped-to])))))))
+
+
+(defn backup-whole-db!
+  "Write the whole big-cfg DB to a file with pull API. No provisions to read it back it back."
+  []
+  (with-open [out (io/writer "data/big-cfg-out.edn")]
+    (doseq [obj (dp/pull-many @(d/connect big-cfg) '[*] (range 1 1350))]
+      (cl-format out "~A" (with-out-str (pprint obj))))))

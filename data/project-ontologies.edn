@@ -1,0 +1,21 @@
+;;; This really belongs in a project that uses this library, not here.
+
+{:cause  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl"  :ref-only? true},
+ :coll   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collections.owl"},
+ :colv   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Collectives.owl"},
+ :common {:uri "http://www.ontologydesignpatterns.org/ont/dlp/CommonSenseMapping.owl"},
+ :dlp    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DLP_397.owl"},
+ :dol    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl"},
+ :edns   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ExtendedDnS.owl"},
+ :fpar   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/FunctionalParticipation.owl"},
+ :info   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/InformationObjects.owl"},
+ :modal  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/ModalDescriptions.owl"},
+ :pla    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl"},
+ :sem    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SemioticCommunicationTheory.owl" :ref-only? true},
+ :space  {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SpatialRelations.owl"},
+ :soc    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/SocialUnits.owl"},
+ :sys    {:uri "http://www.ontologydesignpatterns.org/ont/dlp/Systems.owl"},
+ :time   {:uri "http://www.ontologydesignpatterns.org/ont/dlp/TemporalRelations.owl"},
+
+ :model  {:uri "http://modelmeth.nist.gov/modeling",   :access "data/modeling.ttl",   :format :turtle},
+ :ops    {:uri "http://modelmeth.nist.gov/operations", :access "data/operations.ttl", :format :turtle}}

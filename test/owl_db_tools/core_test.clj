@@ -4,8 +4,7 @@
    [clojure.test :refer  [deftest is testing]]
    [clojure.pprint :refer [pprint]]
    [datahike.api          :as d]
-   ;[datahike.pull-api     :as dp]
-   [edu.ucdenver.ccp.kr.jena.kb]
+   ;[edu.ucdenver.ccp.kr.jena.kb] ; This was needed even before 2024. Not clear why. Now it is getting a bug.
    [owl-db-tools.core        :as owl]
    [owl-db-tools.util        :as util]
    [owl-db-tools.resolvers   :as res]

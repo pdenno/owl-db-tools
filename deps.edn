@@ -1,19 +1,46 @@
+;;; owl-db-tools
+
 {:paths ["src" "resources"]
- :deps {com.taoensso/timbre           {:mvn/version "5.2.1"}
-        edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}
-        com.wsscode/pathom3           {:mvn/version "2022.07.08-alpha"}
-        io.replikativ/datahike        {:mvn/version "0.5.1507"}
-        org.clojure/clojure           {:mvn/version "1.11.1"}
+ :deps {com.github.pdenno/aristotle   {:mvn/version "1.0.72"}
+        com.taoensso/timbre           {:mvn/version "6.6.1"}
+        com.taoensso/telemere         {:mvn/version "1.0.0-RC1"}
+        com.taoensso/telemere-slf4j   {:mvn/version "1.0.0-RC1"} ; Just adding it here initializes it; try (tel/check-interop).
+        com.wsscode/pathom3           {:mvn/version "2024.11.23-alpha"}
+        ;;edu.ucdenver.ccp/kr-jena-core {:mvn/version "1.4.19"}    ; Might not work with clojure 1.12.0 (not investigated).
+        io.github.paintparty/bling    {:mvn/version "0.4.2"}
+        io.replikativ/datahike        {:mvn/version "0.6.1594"}
+        org.apache.jena/apache-jena-libs {:mvn/version "4.9.0" :extension "pom"} ; Copied from aristotle's deps.edn. <===========================
+        org.clojure/clojure           {:mvn/version "1.11.1"} ;
         org.clojure/java.jdbc         {:mvn/version "0.7.12"}}
 
- :aliases  {:test {:extra-paths ["test"]
-                   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.69.1069"}}}
+ :aliases  {:dev  {:extra-paths ["test" #_"env/dev"]
+                   :extra-deps {cider/cider-nrepl               {:mvn/version "0.50.2"}
+                                com.lambdaisland/classpath      {:mvn/version "0.5.48"}
+                                expound/expound                 {:mvn/version "0.9.0"} ; more readable spec messages
+                                org.clojure/java.classpath      {:mvn/version "1.1.0"}
+                                nrepl/nrepl                     {:mvn/version "1.3.0"}
+                                org.clojure/tools.namespace     {:mvn/version "1.5.0"}}}
 
-            :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
+            :test {:extra-paths ["test"]
+                   :extra-deps  {lambdaisland/kaocha            {:mvn/version "1.69.1069"}
+                                 org.clojure/tools.namespace    {:mvn/version "1.5.0"}}}
+
+            :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :remote
                                  :sign-releases? false
                                  :artifact "owl-db-tools-1.0.42.jar"}}
 
-            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}}
+            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.10.6" :git/sha "52cf7d6"}}
                     :ns-default build}}}
+
+;;; clj -X:search/outdated
+;;;  |    :file |                         :name |         :current |          :latest |
+;;;  |----------+-------------------------------+------------------+------------------|
+;;;  | deps.edn |           com.taoensso/timbre |            5.2.1 |            6.6.1 |
+;;;  |          |           com.wsscode/pathom3 | 2022.07.08-alpha | 2024.11.23-alpha |
+;;;  |          | io.github.clojure/tools.build |           v0.8.3 |          v0.10.6 |
+;;;  |          |        io.replikativ/datahike |         0.5.1507 |         0.6.1594 |
+;;;  |          |           lambdaisland/kaocha |        1.69.1069 |        1.91.1392 |
+;;;  |          |           org.clojure/clojure |           1.11.1 |           1.12.0 |
+;;;  |          |           slipset/deps-deploy |            0.2.0 |            0.2.2 |

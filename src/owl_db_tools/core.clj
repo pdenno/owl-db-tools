@@ -1,16 +1,19 @@
 (ns owl-db-tools.core
   "Load the datahike (DH) database from Jena content; define pathom resolvers."
   (:require
-   [clojure.string             :as str]
-   [datahike.api               :as d]
-   [datahike.pull-api          :as dp]
-   [edu.ucdenver.ccp.kr.kb     :as kb]      ; ToDo: This version of Jena uses log4j 1.2 which does not have the vulnerability:
-   [edu.ucdenver.ccp.kr.jena.kb]            ; https://www.cisa.gov/uscert/apache-log4j-vulnerability-guidance
-   [edu.ucdenver.ccp.kr.rdf    :as rdf]     ; However, some work is needed (a ToDo) to avoid a configuration warning.
-   [edu.ucdenver.ccp.kr.sparql :as sparql]  ; See https://logging.apache.org/log4j/1.2/faq.html#a3.5
-   [owl-db-tools.util          :as util]
-   [taoensso.timbre            :as log])
-  (:import java.io.ByteArrayInputStream))
+   [arachne.aristotle            :as aa]
+   [arachne.aristotle.graph      :as g]
+   [arachne.aristotle.query      :as q]
+   [arachne.aristotle.registry   :as reg]
+   [clojure.datafy               :refer [datafy]]
+   [clojure.edn                  :as edn]
+   [clojure.java.io              :as io]
+   [clojure.pprint               :refer [pprint]]
+   [clojure.string               :as str]
+   [datahike.api                 :as d]
+   [datahike.pull-api            :as dp]
+   [owl-db-tools.util            :as util]
+   [taoensso.telemere            :refer [log!]]))
 
 ;;; * I use 'dvecs' to mean the Jena data stored as a vector of 3-element vectors.
 ;;; * I use 'dmaps' to mean the dvecs data reorganized as a map indexed by :resource/iri or a keyword in the "temp" from Jena.
@@ -21,7 +24,6 @@
 ;;;   - Add :user-schema to create-db!.
 ;;;   - Add app/learned? to schema elements.
 ;;;   - Write about API in the README
-;;;   - Define a log4j configuration for Jena (or fork edu.ucdever.cpp.kr and fix it myself).
 ;;;   - Making resource on-the-fly: :owl/Class (investigate)
 ;;;   - Making resource on-the-fly: :owl/Restriction (investigate)
 
@@ -29,7 +31,38 @@
 (def ^:dynamic *conn* "A dynamic var that is bound to a DB connection on db-create" nil)
 
 (def debugging? false)
-(util/config-log (if debugging? :debug :info))
+
+(defn load-graph!
+  "Given a map of entries like this:
+     {:pla    {:uri \"http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl\"},...
+      :dol    {:uri \"http://www.ontologydesignpatterns.org/ont/dlp/DOLCE-Lite.owl\"},
+      :model  {:uri \"http://modelmeth.nist.gov/modeling\", :access \"data/modeling.ttl\", :format :turtle},
+      :cause  {:uri \"http://www.ontologydesignpatterns.org/ont/dlp/Causality.owl\"  :ref-only? true},
+     ...}
+
+    where
+      - the keys name a RDF ns prefix,
+      - :uri is a mandatory URI,
+      - :access describes a path to the ontology file (.ttl etc.), and
+      - :ref-only? indicates that only the alias/URI relationship is being defined (no data file),
+
+    create an RDF graph that contains the cited data and can use the prefixes (see reg/*registry*)
+    Set the value of the atom to the graph."
+  [info-map graph-atm]
+  (let [graph (aa/graph :simple)]
+    (doseq [[alias {:keys [uri access ref-only?] :as info}] info-map]
+      (try
+        (reg/prefix (-> alias name symbol) uri) ; See the result of this in reg/*registry*
+        (if access
+          (aa/read graph access)
+          (when-not ref-only? (aa/read graph (java.net.URI. uri))))
+        (catch Exception e
+          (let [d-e (datafy e)]
+            (log! :warn (str "load-graph: alias = " alias " info = " info
+                             "\nmessage: " (-> d-e :via first :message)
+                             "\ncause: " (-> d-e :data :body)
+                             "\ntrace: " (with-out-str (pprint (:trace d-e)))))))))
+    (reset! graph-atm graph)))
 
 ;;; There is a bijection between :resource/iri and a subset of :db/id.
 ;;; The types of OWL things are defined in https://www.w3.org/TR/2012/REC-owl2-quick-reference-20121211/
@@ -149,45 +182,6 @@
        (d/transact conn data)
        (catch Exception e (throw (ex-info "Invalid data for d/transact" {:data data :e (.getMessage e)})))))
 
-(defn load-inline
-  "When (:access src) is the keyword :inline, then src will also include :inline-data"
-  [src]
-  (-> src :inline-data .getBytes ByteArrayInputStream.))
-
-(defn load-local
-  "Load an ontology stored in a file in resources."
-  [src]
-  (-> src :access slurp .getBytes ByteArrayInputStream.))
-
-(defn load-remote
-  "Experience suggests some sites (e.g. ontologydesignpatterns.org) cannot be relied upon.
-   Return nil if you can't load from the :access URL, otherwise return the stream."
-  [src & {:keys [timeout] :or {timeout 10000}}]
-  (let [p (promise)]
-    (future (deliver p (-> src :uri slurp .getBytes ByteArrayInputStream.)))
-    (if-let [result (deref p timeout nil)]
-      result
-      (do
-        (reset! loaded-ok? false)
-        (log/error "Timeout: Failed to access" (:uri src))))))
-
-(defn load-jena
-  "Using Jena, return an rdf/KB object with the argument ontologies loaded."
-  [{:keys [uri access format] :as src}]
-  (let [kb (kb/kb :jena-mem)]
-    (when @loaded-ok?
-      (log/info "Loading" uri))
-    (when-let [stream (cond (string? access)   (load-local  src),
-                            (= access :inline) (load-inline src),
-                            :else              (load-remote src))]
-      (rdf/load-rdf kb stream (or format :rdfxml)))
-    ;; If you do the sync, some resources won't print namespace-qualified in sparql queries.
-    ;; It will be correct in the Jena DB, just not printed. More on this (possibly related!):
-    ;;    (1) https://github.com/drlivingston/kr
-    ;;    (2) https://jena.apache.org/tutorials/rdf_api.html#ch-Prefixes
-    #_(rdf/synch-ns-mappings kb)
-    kb))
-
 (def long2short "a map from URI strings to prefix strings" (atom nil))
 
 (defn update-long2short!
@@ -226,7 +220,7 @@
                       (keyword base nam)),
                     (if-let [onto-kw (onto-keyword v)]
                       (if ref? {:resource/temp-ref (onto-keyword v)} onto-kw)
-                      (do (log/warn "Keywordizing triple: ambiguous:" (str v))
+                      (do (log! :warn (str "Keywordizing triple: ambiguous:" v))
                           (keyword "BUG" (str v)))))))
               v))]
     (let [cx (convert x)
@@ -293,7 +287,7 @@
             (and (= typ clojure.lang.PersistentArrayMap)
                  (every? #(contains? % :resource/temp-ref) data)) :db.type/ref,
             :else (throw (ex-info "Cannot learn type for" {:data data})))
-      (log/error "Found multiple types while learning" prop types))))
+      (log! :error (str "Found multiple types while learning " prop " " types)))))
 
 (defn learn-cardinality
   "Return either :db.cardinality/many or :db.cardinality/one based on evidence."
@@ -324,7 +318,7 @@
                           :cardinality (learn-cardinality prop examples)
                           :valueType   (learn-type prop examples)
                           :app/origin :learned}]
-            (log/debug "learned:" spec)
+            (log! :debug (str "learned: " spec))
             (swap! learned #(conj % spec))
             (swap! full-schema #(conj % spec))))))
     (transact? conn @learned)))
@@ -379,13 +373,12 @@
   [temp-maps]
   (let [progress? (atom true)]
     (letfn [(rt-aux [obj tm]
-              (cond (temp-id? obj)
-                    (if-let [v (get tm obj)]
-                      (do (reset! progress? true) v)
-                      (log/error "Could not find" obj)),
-                    (map?  obj) (reduce-kv (fn [m k v] (assoc m k (rt-aux v tm))) {} obj),
-                    (coll? obj) (mapv #(rt-aux % tm) obj),
-                    :else obj))]
+              (cond (temp-id? obj)    (if-let [v (get tm obj)]
+                                        (do (reset! progress? true) v)
+                                        (log! :error (str "Could not find " obj))),
+                    (map?  obj)       (reduce-kv (fn [m k v] (assoc m k (rt-aux v tm))) {} obj),
+                    (coll? obj)       (mapv #(rt-aux % tm) obj),
+                    :else             obj))]
       (loop [tmaps temp-maps
              count 0]
         (reset! progress? false)
@@ -448,7 +441,7 @@
   "Return the :db/id of the resource given the its ns-qualified keyword identifier."
   [id conn]
   (or (d/q `[:find ?e . :where [?e :resource/iri ~id]] @conn)
-      (do (log/debug "Making resource on-the-fly:" id)
+      (do (log! :debug (str "Making resource on-the-fly: " id))
           (transact? conn [{:resource/iri id
                             :resource/name (name id)
                             :resource/namespace (namespace id)}])
@@ -491,7 +484,7 @@
                                      :resource/namespace (namespace x)}) resources)) ; transact resource stubs.
       (transact? conn (resolve-temp-refs dmapv conn)))))
 
-(defn prefix-maps
+#_(defn prefix-maps
   "Define a map relating prefixes to URIs found by means of the Jena.
    Check whether the DB already has a short-name for that resource (user might have specified it).
    If a short-name already exists, keep it. (Both long and short are db.unique db.identity,
@@ -512,7 +505,32 @@
             sname (:source/short-name name-map)
             defined-sname (get defined-names lname)]
         (if (and (contains? defined-names lname) (not= sname defined-sname))
-          (log/warn "Source uses" sname "as prefix for" lname "but" defined-sname "is already used for that.")
+          (log! :warn (str "Source uses " sname " as prefix for " lname " but " defined-sname " is already used for that."))
+          (swap! result conj name-map))))
+    @result))
+
+(defn prefix-maps
+  "Define a map relating prefixes to URIs found by means of the Jena.
+   Check whether the DB already has a short-name for that resource (user might have specified it).
+   If a short-name already exists, keep it. (Both long and short are db.unique db.identity,
+   intentionally, so you really can't change it anyway."
+  [jkb conn]
+  (let [jena-names (as-> {} #_(kb/.root-ns-map jkb) ?x ; <=========================================================================
+                     (dissoc ?x "")
+                     (reduce-kv (fn [res sname lname]
+                                  (conj res {:resource/iri (onto-keyword lname)
+                                             :source/short-name sname
+                                             :source/long-name (-> (re-matches #"^([^#]+)#?" lname) second)}))
+                                []
+                                ?x))
+        defined-names (sources conn :l2s true)
+        result (atom [])]
+    (doseq [name-map jena-names]
+      (let [lname (:source/long-name name-map)
+            sname (:source/short-name name-map)
+            defined-sname (get defined-names lname)]
+        (if (and (contains? defined-names lname) (not= sname defined-sname))
+          (log! :warn (str "Source uses " sname " as prefix for " lname " but " defined-sname " is already used for that."))
           (swap! result conj name-map))))
     @result))
 
@@ -533,7 +551,7 @@
     (d/transact conn [[:db/add eid :source/loaded? true]])))
 
 ;;;------------------------ API functions ---------------------------------
-(defn create-db!
+#_(defn create-db!
   "If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
    Otherwise, just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
@@ -545,22 +563,41 @@
           (do (d/delete-database db-cfg)
               (d/create-database db-cfg)
               (let [conn-atm (d/connect db-cfg)]
-                (log/info "Initializing a fresh DB.")
+                (log! :info "Initializing a fresh DB.")
                 (transact? conn-atm @full-schema)
                 (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
                 (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
                 (doseq [onto-spec (vals load-ontos)]
                   (let [jkb (load-jena onto-spec)
-                        jena-maps (sparql/query jkb '((?/x ?/y ?/z)))]
+                        jena-maps {} #_(sparql/query jkb '((?/x ?/y ?/z)))]
                     (transact? conn-atm (prefix-maps jkb @conn-atm))  ; URI to prefix maps from Jena loading the source
                     (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
                     (store-onto! conn-atm jena-maps)
                     (mark-as-stored onto-spec conn-atm)))
                  (alter-var-root (var *conn*) (fn [_] @conn-atm)))),
-          (not site-ok?) (log/error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
+          (not site-ok?) (log! :error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
           (d/database-exists? db-cfg)
           (alter-var-root (var *conn*) (fn [_] @(d/connect db-cfg)))
-          :else (log/warn "There is no DB to connect to."))))
+          :else (log! :warn "There is no DB to connect to."))))
+
+(defn create-db!
+  "If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
+   Otherwise, just set the connection atom, conn.
+   BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
+  [db-cfg graph-atm & {:keys [user-attrs]}]
+  (reset-for-new-db!)
+  (d/delete-database db-cfg)
+  (d/create-database db-cfg)
+  (let [conn-atm (d/connect db-cfg)]
+    (log! :info "Initializing a fresh DB.")
+    (transact? conn-atm @full-schema)
+    (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
+    (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
+    (let [jena-maps (q/run @graph-atm '[:bgp [?x ?y ?z]])]
+      (transact? conn-atm (prefix-maps jkb @conn-atm))  ; URI to prefix maps from Jena loading the source
+      (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
+      (store-onto! conn-atm jena-maps))))
+
 
 (defn resource-ids ; ToDo should/could this be lazy?
   "Return a vector of resource keywords"
