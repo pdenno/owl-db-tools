@@ -7,9 +7,9 @@
    [com.wsscode.pathom3.connect.operation :as pco]
    [com.wsscode.pathom3.interface.eql :as p.eql]
    [datahike.api               :as d]
-   [datahike.pull-api          :as dp]
-   [owl-db-tools.core   :as owl :refer [*conn*]]
-   [owl-db-tools.util   :as util]))
+   [datahike.pull-api          :as dp]))
+
+(def *conn* "This is all going away!" nil)
 
 (defn attr-info
   "Return a vector of maps containing :attr/id and :attr/type
@@ -49,7 +49,7 @@
     (fn [_env {:resource/keys [iri]}]
       (when *conn*
          (-> (dp/pull *conn* [attr] [:resource/iri iri])
-             (util/resolve-obj *conn*))))
+             #_(util/resolve-obj *conn*))))
     (fn [_env {:resource/keys [iri]}]
       (when *conn*
         (dp/pull *conn* [attr] [:resource/iri iri])))))
@@ -110,7 +110,7 @@
   (binding [*conn* conn]
     (as->  (resource-by-iri {:resource/iri resource-iri}) ?x
         (:resource/body ?x)
-        (util/resolve-obj ?x *conn* :keep-db-ids? keep-db-ids?)
+        #_(util/resolve-obj ?x *conn* :keep-db-ids? keep-db-ids?)
         (if sort? (into (sorted-map-by owl-order) ?x) ?x)
         (if (contains? ?x :rdfs/subClassOf)
           (update ?x :rdfs/subClassOf subclass-of-sort)
@@ -143,7 +143,7 @@
                                :where
                                [?e :resource/iri ~iri]
                                [?e :rdf/type ?type]
-                               [?type :resource/iri :owl/ObjectProperty]] *conn*))
+                                [?type :resource/iri :owl/ObjectProperty]] *conn*))
                       context)]
      (println "Here!")
      (reset! diag {:context context :res res})

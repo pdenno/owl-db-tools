@@ -1,10 +1,6 @@
 (ns owl-db-tools.resolvers-test
   "Testing auto-created Pathom3 resolvers Note comment below about the need to build the DB before testing."
   (:require
-   [arachne.aristotle             :as aa]
-   [arachne.aristotle.graph       :as g]
-   [arachne.aristotle.query       :as q]
-   [arachne.aristotle.registry    :as reg]
    [clojure.pprint                :refer [cl-format pprint]]
    [clojure.edn                   :as edn]
    [clojure.java.io               :as io]
@@ -13,9 +9,9 @@
    ;;[edu.ucdenver.ccp.kr.jena.kb] ; This was added in 2024, following the pattern in core_test, that was before 2024.
    [datahike.api                  :as d]
    [datahike.pull-api             :as dp]
-   [owl-db-tools.core      :as core :refer [*conn*]]
-   [owl-db-tools.resolvers :as res]
-   [taoensso.telemere       :as tel :refer [log!]]))
+   [owl-db-tools.core      :as core]
+   [owl-db-tools.util      :as util :refer [connect-atm]]
+   [owl-db-tools.resolvers :as res]))
 
 ;;; THIS is the namespace I am hanging out in recently.
 (def ^:diag diag (atom nil))
@@ -39,11 +35,17 @@
              (find-ns ns-sym))
     (alias al ns-sym)))
 
+
+
 (defn ^:diag ns-setup!
   "Use this to setup useful aliases for working in this NS."
   []
   (ns-start-over!)
   (reset! alias? (-> (ns-aliases *ns*) keys set))
+  (safe-alias 'aa     'arachne.aristotle)
+  (safe-alias 'g      'arachne.graph)
+  (safe-alias 'q      'arachne.query)
+  (safe-alias 'reg    'arachne.registry)
   (safe-alias 's      'clojure.spec.alpha)
   (safe-alias 'io     'clojure.java.io)
   (safe-alias 'str    'clojure.string)
@@ -51,7 +53,8 @@
   (safe-alias 'dp     'datahike.pull-api)
   (safe-alias 'core   'owl-db-tools.core)
   (safe-alias 'res    'owl-db-tools.resolvers)
-  (safe-alias 'util   'owl-db-tools.util))
+  (safe-alias 'util   'owl-db-tools.util)
+  (safe-alias 'tel    'taoensso.telemere))
 
 ;;; In order to run these tests, first time, it is necessary to create the directory below and run make-big-db, also below.
 ;;; (make-big-db big-cfg)
@@ -60,20 +63,19 @@
               :keep-history? false
               :schema-flexibility :write})
 
-(def big-sources (-> "project-ontologies.edn" io/resource slurp edn/read-string))
+(defonce big-sources (-> "project-ontologies.edn" io/resource slurp edn/read-string))
 
 ;;;================================== aristotle stuff =======================================
 ;;;================================== end aristotle stuff =================================
 
 ;;; (make-big-db big-cfg)
 (defn make-big-db
-  "This establishes the DB and sets *conn*. It takes a minute or two."
-  [cfg]
-  (when (d/database-exists? cfg) (d/delete-database cfg))
-  (owl/create-db!
-   cfg
+  "This establishes the DB. It takes a minute or two."
+  []
+  (core/create-db!
    big-sources
-   :rebuild? true
+   big-cfg
+   :reload-graph? true
    :check-sites ["http://ontologydesignpatterns.org/wiki/Main_Page"]))
 
 (defn save-big-db-files
@@ -107,17 +109,17 @@
 
 (deftest resolvers-work
   (testing "Testing that resolvers work"
-    (binding [*conn* @(d/connect big-cfg)]
-      (let [test-db (res/register-resolvers! *conn*)
+      (let [conn-atm (d/connect big-cfg)
+            test-db (res/register-resolvers! conn-atm)
             body {:input [:resource/iri],
                   :output [:resource/attr],
-                  :fn (fn [_env {:resource/keys [iri]}] {:resource/attr (dp/pull *conn* '[:rdfs/comment] [:resource/iri iri])})}
+                  :fn (fn [_env {:resource/keys [iri]}] {:resource/attr (dp/pull @conn-atm '[:rdfs/comment] [:resource/iri iri])})}
             res-1 (res/make-resolver 'test-get-comment-1 body)
             res-2 (res/make-resolver 'test-get-comment-2 (assoc body :fn (res/attr-fn :rdfs/comment false)))]
         (is (= resolver-answer (:resource/attr (res-1 nil {:resource/iri :info/mapped-to}))))
         (is (= resolver-answer                 (res-2 nil {:resource/iri :info/mapped-to})))
         (is (= resolver-answer (get (test-db [{[:resource/iri :info/mapped-to] [:rdfs/comment]}])
-                                    [:resource/iri :info/mapped-to])))))))
+                                    [:resource/iri :info/mapped-to]))))))
 
 ;;; Last I used this, it was for the original 'drlivingston/kr' DB.
 (defn backup-whole-db!
@@ -147,9 +149,7 @@
     (cl-format out "~%]")))
 
 
-(def ggg (atom nil))
-
-(defn tryme []
+#_(defn tryme []
   (let [graph (atom nil)
         conn @(d/connect big-cfg)] ; Later!
     #_(-> "project-ontologies.edn" io/resource slurp edn/read-string (core/load-graph! ggg))
