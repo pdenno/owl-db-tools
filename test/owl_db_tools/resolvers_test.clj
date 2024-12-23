@@ -35,8 +35,6 @@
              (find-ns ns-sym))
     (alias al ns-sym)))
 
-
-
 (defn ^:diag ns-setup!
   "Use this to setup useful aliases for working in this NS."
   []
