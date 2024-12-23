@@ -64,7 +64,11 @@ Examples of the use of sources can be found in the test directory.
 
 ## Creating the Database
 
-With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. The function returns a connection objct to the database; it also sets the dynamic variable `*conn*` in the core namespace to this connection object. A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. It can also be acquired directly from Datahike by calling `(datahike.api/connect <db-config-map-as-described-above>)`, which returns an atom containing the connection object.
+With the database configured and the source defined as described above, you then call ```(owl/create-db! db-cfg onto-sources)``` to create the database. 
+The function returns a connection objct to the database. 
+It also sets an atom core/*conn* in the core namespace to this connection object. 
+A new connection can be acquired at any time by calling the fucntion again without the :rebuild? argument. 
+It can also be acquired directly from Datahike by calling `(datahike.api/connect <db-config-map-as-described-above>)`, which returns an atom containing the connection object.
 
 ```clojure
 (require '[owl-db-tools.core :as owl])
@@ -176,13 +180,6 @@ You can specify `:keep-db-ids? true` in the call if you would like the result to
 ### `resource-ids`
 
 `resource-ids` (in the core namespace) takes one argument, the database connection and returns a vector of resource IDs (namespaced keyword).
-
-### `sources`
-
-`sources` (in the core namespace) takes one required argument, the database connection and returns a map of  information about sources read.
-
-An optional boolean keyword argument `:l2s` (meaning 'long to short') can be specified to return a simple map of
-resource URI strings (the map keys) to short-names used as the namespaces of keyword resource IDs.
 
 ### `schema-attributes`
 

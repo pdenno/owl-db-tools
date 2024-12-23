@@ -13,7 +13,7 @@
    ;;[edu.ucdenver.ccp.kr.jena.kb] ; This was added in 2024, following the pattern in core_test, that was before 2024.
    [datahike.api                  :as d]
    [datahike.pull-api             :as dp]
-   [owl-db-tools.core      :as owl :refer [*conn*]]
+   [owl-db-tools.core      :as core :refer [*conn*]]
    [owl-db-tools.resolvers :as res]
    [taoensso.telemere       :as tel :refer [log!]]))
 
@@ -119,10 +119,38 @@
         (is (= resolver-answer (get (test-db [{[:resource/iri :info/mapped-to] [:rdfs/comment]}])
                                     [:resource/iri :info/mapped-to])))))))
 
-
+;;; Last I used this, it was for the original 'drlivingston/kr' DB.
 (defn backup-whole-db!
   "Write the whole big-cfg DB to a file with pull API. No provisions to read it back it back."
   []
   (with-open [out (io/writer "data/big-cfg-out.edn")]
     (doseq [obj (dp/pull-many @(d/connect big-cfg) '[*] (range 1 1350))]
       (cl-format out "~A" (with-out-str (pprint obj))))))
+
+;;; I used this to output intermediate stuff from aristotle.
+;;; (backup-triples (q/run @core/graph-memo '[:bgp [?x ?y ?z]]))
+(defn backup-triples
+  "Write the triples to edn."
+  [triples]
+  (with-open [out (io/writer "data/aristotle-triples.edn")]
+    (cl-format out "~%[")
+    (doseq [obj triples] (cl-format out "~%~A" (with-out-str (pprint obj))))
+    (cl-format out "~%]")))
+
+;;; (backup-finished-triples @core/diag)
+(defn backup-finished-maps
+  "Write the dmapv triples to edn."
+  [triples]
+  (with-open [out (io/writer "data/finished-maps.edn")]
+    (cl-format out "~%[")
+    (doseq [obj triples] (cl-format out "~%~A" (with-out-str (pprint obj))))
+    (cl-format out "~%]")))
+
+
+(def ggg (atom nil))
+
+(defn tryme []
+  (let [graph (atom nil)
+        conn @(d/connect big-cfg)] ; Later!
+    #_(-> "project-ontologies.edn" io/resource slurp edn/read-string (core/load-graph! ggg))
+    (core/prefix-maps conn)))

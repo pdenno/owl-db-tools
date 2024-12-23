@@ -1,6 +1,21 @@
 ;;; https://github.com/borkdude/clj-kondo/blob/master/doc/config.md
 {:linters {:clojure-lsp/unused-public-var {:level :warning
-                                           :exclude-when-contains-meta #{:diag}}}
+                                           :exclude-when-contains-meta #{:diag}}
+           :unresolved-var                {:exclude [datahike.api ajax.core
+                                                     taoensso.telemere/*ctx*
+                                                     taoensso.telemere/call-on-shutdown!
+                                                     taoensso.telemere/check-interop
+                                                     taoensso.telemere/add-handler!
+                                                     taoensso.telemere/handler:console
+                                                     taoensso.telemere/handler:file
+                                                     taoensso.telemere/pr-signal-fn
+                                                     taoensso.telemere/remove-handler!
+                                                     taoensso.telemere/set-ctx!
+                                                     taoensso.telemere/set-middleware!
+                                                     taoensso.telemere/signal!
+                                                     taoensso.telemere/stop-handlers!
+                                                     taoensso.telemere/streams->telemere!
+                                                     taoensso.telemere/with-kind-filter]}}
 
  :lint-as {com.wsscode.pathom3.connect.operation/defmutation clojure.core/defn
            com.wsscode.pathom3.connect.operation/defresolver clojure.core/defn

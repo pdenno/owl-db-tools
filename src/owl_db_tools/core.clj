@@ -2,17 +2,13 @@
   "Load the datahike (DH) database from Jena content; define pathom resolvers."
   (:require
    [arachne.aristotle            :as aa]
-   [arachne.aristotle.graph      :as g]
    [arachne.aristotle.query      :as q]
    [arachne.aristotle.registry   :as reg]
    [clojure.datafy               :refer [datafy]]
-   [clojure.edn                  :as edn]
-   [clojure.java.io              :as io]
    [clojure.pprint               :refer [pprint]]
+   [clojure.set                  :as set]
    [clojure.string               :as str]
    [datahike.api                 :as d]
-   [datahike.pull-api            :as dp]
-   [owl-db-tools.util            :as util]
    [taoensso.telemere            :refer [log!]]))
 
 ;;; * I use 'dvecs' to mean the Jena data stored as a vector of 3-element vectors.
@@ -21,17 +17,17 @@
 ;;; And those three bullets points pretty much describe the program architecture!
 
 ;;; ToDo:
-;;;   - Add :user-schema to create-db!.
-;;;   - Add app/learned? to schema elements.
+;;;   - Don't actually write to a DB, just make the stuff people could use (objects and learned schema).
+;;;     + I mean here, don't even include datahike!  This is a good idea! Call it rdf2clj.
+;;;     + Drop the pathom dependency too!
 ;;;   - Write about API in the README
-;;;   - Making resource on-the-fly: :owl/Class (investigate)
-;;;   - Making resource on-the-fly: :owl/Restriction (investigate)
+;;;   - Making resource on-the-fly: :owl/Class and :owl/Restriction (investigate). See lookup-resource
 
-(declare sources)
-(def ^:dynamic *conn* "A dynamic var that is bound to a DB connection on db-create" nil)
+;;;  This is an atom to hold the RDF graph, useful in debugging.
+(defonce graph-memo (atom nil))
+(def ^:diag diag (atom nil))
 
-(def debugging? false)
-
+;;; (-> "project-ontologies.edn" io/resource slurp edn/read-string (core/load-graph! ggg))
 (defn load-graph!
   "Given a map of entries like this:
      {:pla    {:uri \"http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl\"},...
@@ -47,13 +43,13 @@
       - :ref-only? indicates that only the alias/URI relationship is being defined (no data file),
 
     create an RDF graph that contains the cited data and can use the prefixes (see reg/*registry*)
-    Set the value of the atom to the graph."
-  [info-map graph-atm]
+    Returns an Jena respresentation of an RDF graph. Resets the core/graph-memo atom."
+  [info-map]
   (let [graph (aa/graph :simple)]
     (doseq [[alias {:keys [uri access ref-only?] :as info}] info-map]
       (try
         (reg/prefix (-> alias name symbol) uri) ; See the result of this in reg/*registry*
-        (if access
+        (if access ; the value of access is a local pathname.
           (aa/read graph access)
           (when-not ref-only? (aa/read graph (java.net.URI. uri))))
         (catch Exception e
@@ -62,11 +58,11 @@
                              "\nmessage: " (-> d-e :via first :message)
                              "\ncause: " (-> d-e :data :body)
                              "\ntrace: " (with-out-str (pprint (:trace d-e)))))))))
-    (reset! graph-atm graph)))
+    (reset! graph-memo graph)))
 
 ;;; There is a bijection between :resource/iri and a subset of :db/id.
 ;;; The types of OWL things are defined in https://www.w3.org/TR/2012/REC-owl2-quick-reference-20121211/
-(def app-schema
+(def static-schema
   [#:db{:ident :resource/iri       :cardinality :db.cardinality/one :valueType :db.type/keyword :unique :db.unique/identity}
    #:db{:ident :resource/name      :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :resource/namespace :cardinality :db.cardinality/one :valueType :db.type/string}
@@ -77,11 +73,12 @@
    #:db{:ident :box/keyword-val    :cardinality :db.cardinality/one :valueType :db.type/ref}   ; for example, boxing is necessary,
    #:db{:ident :box/number-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; such as when you need to store a
    #:db{:ident :box/string-val     :cardinality :db.cardinality/one :valueType :db.type/ref}   ; ref, but have one of these db.type.
-   #:db{:ident :app/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}])
+   #:db{:ident :app/origin         :cardinality :db.cardinality/one :valueType :db.type/keyword}
 
-(def owl-schema
-   ;; multi-valued properties
-  [#:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
+   ;; owl-schema --  multi-valued properties
+   #:db{:ident :owl/allValuesFrom      :cardinality :db.cardinality/many :valueType :db.type/ref}
+   #:db{:ident :owl/deprecated         :cardinality :db.cardinality/many :valueType :db.type/string
+        :doc "ToDo: Is this actually OWL, or did I make this up?"}
    #:db{:ident :owl/disjointUnionOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/disjointWith       :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/equivalentClasses  :cardinality :db.cardinality/many :valueType :db.type/ref}
@@ -97,7 +94,7 @@
    #:db{:ident :owl/unionOf            :cardinality :db.cardinality/many :valueType :db.type/ref}
    #:db{:ident :owl/withRestrictions   :cardinality :db.cardinality/many :valueType :db.type/ref}
 
-   ;; single-valued properties
+   ;; owl-schema -- single-valued properties
    #:db{:ident :owl/backwardCompatibleWith :cardinality :db.cardinality/one :valueType :db.type/string}
    #:db{:ident :owl/cardinality            :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/complementOf           :cardinality :db.cardinality/one :valueType :db.type/ref}
@@ -107,44 +104,30 @@
    #:db{:ident :owl/inverseOf              :cardinality :db.cardinality/one :valueType :db.type/ref}
    #:db{:ident :owl/minCardinality         :cardinality :db.cardinality/one :valueType :db.type/number}
    #:db{:ident :owl/onProperty             :cardinality :db.cardinality/one :valueType :db.type/ref}
-   #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}])
+   #:db{:ident :owl/versionInfo            :cardinality :db.cardinality/one :valueType :db.type/string}
 
-;;; Where a property P has more than one rdfs:domain property, then the resources denoted by subjects of triples
-;;; with predicate P are instances of all the classes stated by the rdfs:domain properties.
-(def rdfs-schema
-  [#:db{:ident :rdfs/domain        :cardinality :db.cardinality/many  :valueType :db.type/ref}
+   ;; rdfs-schema
+   ;; Where a property P has more than one rdfs:domain property, then the resources denoted by subjects of triples
+   ;; with predicate P are instances of all the classes stated by the rdfs:domain properties.
+   #:db{:ident :rdfs/domain        :cardinality :db.cardinality/many  :valueType :db.type/ref}
    #:db{:ident :rdfs/range         :cardinality :db.cardinality/many  :valueType :db.type/ref}
    #:db{:ident :rdfs/comment       :cardinality :db.cardinality/many :valueType :db.type/string}
    #:db{:ident :rdfs/subClassOf    :cardinality :db.cardinality/many :valueType :db.type/ref}
-
    #:db{:ident :rdfs/label         :cardinality :db.cardinality/one  :valueType :db.type/string}
-   #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/ref}])
+   #:db{:ident :rdfs/subPropertyOf :cardinality :db.cardinality/one  :valueType :db.type/ref}
 
-(def rdf-schema
-  [#:db{:ident :rdf/type      :cardinality :db.cardinality/one :valueType :db.type/ref} ; boxed because not always a keyword.
+   ;; rdf-schema
+   #:db{:ident :rdf/type      :cardinality :db.cardinality/one :valueType :db.type/ref} ; boxed because not always a keyword.
    #:db{:ident :rdf/parseType :cardinality :db.cardinality/one :valueType :db.type/keyword}]) ; e.g. :collection
-
-(def static-schema "The subset of schema define above."  (atom nil))
-(def full-schema "The currently schema, consisting of static-schema plus what is learned while loading." (atom nil))
 
 (def multi-valued-property?
   "Properties where the object can have many values
    Many-valued properties aren't the same as things bearing temp values. For example, :owl/complement of can have a temp."
-  (atom nil))
+  (->> static-schema (filter #(= :db.cardinality/many (:db/cardinality %))) (map :db/ident) set atom))
 
 (def single-valued-property?
   "The following are properties that can only take one value."
-  (atom nil))
-
-(defn reset-for-new-db! []
-  (reset! static-schema (reduce into [] [owl-schema app-schema rdfs-schema rdf-schema]))
-  (reset! full-schema @static-schema)
-  (reset! single-valued-property?
-          (->> full-schema deref (filter #(= :db.cardinality/one  (:db/cardinality %))) (map :db/ident) set))
-  (reset! multi-valued-property?
-          (->> full-schema deref (filter #(= :db.cardinality/many (:db/cardinality %))) (map :db/ident) set)))
-
-(reset-for-new-db!) ; ToDo: Really needed here?
+  (->> static-schema (filter #(= :db.cardinality/one  (:db/cardinality %))) (map :db/ident) set atom))
 
 (def not-stored-property?
   "These aren't stored; they are used to create vectors."
@@ -153,47 +136,49 @@
 (def real-keyword? ; ToDo shouldn't this reflect learning?
   "Other keywords are assumed to be resources"
   (->>
-   @full-schema
+   static-schema
    (filter #(and (= (:db/valueType %) :db.type/keyword) (not= (:db/ident %) :resource/iri)))
    (map :db/ident)
    set))
 
-(def boxed-property? "These can take multiple values of various types, some need to be boxed." #{:owl/oneOf :rdf/type})
+(def full-schema "the above static-schema plus properties learned or specified by user in create-db!." (atom static-schema))
 
-(def loaded-ok? "When false it is usually because of a timeout slurping a URL." (atom true))
+(def boxed-property? "These can take multiple values of various types, some need to be boxed."
+  #{:owl/oneOf :rdf/type :rdfs/subClassOf})
 
 (defn valid-for-transact?
+  "Return false if the argument is not valid for a transaction in the system's DB.
+   Should be run after learn-schema! as executed."
   [data]
-  (cond (nil? data) (throw (ex-info "nil is not valid for DH transact." {:nil data})),
-        (and (map? data) (empty? data)) (throw (ex-info "{} is not valid for DH transact." {:empty data})),
-        (map? data) (reduce-kv (fn [m k v] (assoc m k (valid-for-transact? v))) {} data)
-        (vector? data) (mapv valid-for-transact? data)
-        (keyword? data) data,
-        (string? data) data,
-        (number? data) data,
-        (boolean? data) data,
-        :else (throw (ex-info "unknown datatype" {:unknown data}))))
+  (let [valid-key? (->> @full-schema (map :db/ident) set)]
+    (letfn [(v4t? [obj]
+              (cond (nil? obj)      (throw (ex-info "Found a nil." {}))
+                    (map? obj)      (if (empty? obj)
+                                      (throw (ex-info "empty map." {}))
+                                      (doseq [[k v] (seq obj)]
+                                        (when-not (valid-key? k)
+                                          (throw (ex-info "Not a DB key:" {:key k})))
+                                        (v4t? v)))
+                    (vector? obj)   (if (empty? obj)
+                                      (throw (ex-info "empty vector." {}))
+                                      (doseq [x obj] (v4t? x)))
+                    (keyword? obj)  true
+                    (number? obj)   true
+                    (string? obj)   true
+                    (boolean? obj)  true
+                    :else           (throw (ex-info "Unknown object" {:obj obj}))))]
+      (v4t? data)
+      true)))
 
 (defn transact?
   "Optionally check that the data is valid before sending it.
    Does not compare against the schema. Currenlty only checks for nils."
-  [conn data & {:keys [check-data?] :or {check-data? debugging?}}]
-  (try (when check-data? (valid-for-transact? data))
-       (d/transact conn data)
-       (catch Exception e (throw (ex-info "Invalid data for d/transact" {:data data :e (.getMessage e)})))))
-
-(def long2short "a map from URI strings to prefix strings" (atom nil))
-
-(defn update-long2short!
-  "Return a map from uri strings to prefix strings"
-  [conn]
-  (reset! long2short
-          (reduce (fn [res [l s]] (assoc res l s))
-                  {}
-                  (d/q '[:find ?l ?s :where
-                         [?e :source/short-name ?s]
-                         [?e :source/long-name  ?l]]
-                       @conn))))
+  [conn-atm data]
+  (try
+    (valid-for-transact? data)
+    (d/transact conn-atm data)
+    (catch Exception e
+      (log! :error (str "transact? failed: " e)))))
 
 (defn onto-keyword
   "Return the keyword representing an ontology or schema (e.g. RDF)."
@@ -202,32 +187,50 @@
     (when (and success (empty? nam))
       (keyword "$source" (str/replace base "/" "%")))))
 
-(defn keywordize-triple
-  "From Jena, all the resources come back as symbols in either namespace '_' or 'http:'.
-   These are to be rendered as keywords in the namespace 'temp' for _, and the short prefix for the full URL otherwise.
-   The function returns a vector of the converted [x y z] triple."
-  [{:?/syms [x y z]}]
-  (letfn [(convert [v & {:keys [ref?]}] ; ToDo: Performance hit for letfn?
-            (if (symbol? v)
-              (cond
-                (= (namespace v) "_") (keyword "temp" (str "t" (name v))), ; Don't let name begin with a number.
-                (= (namespace v) "http:")
-                (let [[success base nam] (re-matches #"^(http://[^#]*)#?(.*)$" (str v))]
-                  (if (and success (not-empty nam))
-                    (if-let [prefix (get @long2short base)]
-                      (let [res (keyword prefix nam)]
-                        (if (and ref? (not= res :rdf/nil)) {:resource/temp-ref res} res))
-                      (keyword base nam)),
-                    (if-let [onto-kw (onto-keyword v)]
-                      (if ref? {:resource/temp-ref (onto-keyword v)} onto-kw)
-                      (do (log! :warn (str "Keywordizing triple: ambiguous:" v))
-                          (keyword "BUG" (str v)))))))
-              v))]
-    (let [cx (convert x)
-          cy (convert y)
-          cz (if (real-keyword? cy) (convert z) (convert z :ref? true))]
-      ;; ToDo: Write spec for triple.
-      (vector cx cy cz))))
+(defn keywordize-triples
+  "Takes a vector of 'triples-maps' with symbol keys ?x ?y ?x and returns a vector of [x y z] in which, where any of the values x, y, or z
+   are resources, they are converted to either a temp using the original _<uuid>, or a map containing a keyword that uses our
+   prefixes, as follows:
+
+   From Jena (using Aristotle), all the resources are represented as either symbols starting _ or as strings matching #\"^<http://.+>$\".
+      - The _ symbols are converted to keywords in the namespace 'temp'.
+      - The <http://...> strings are converted to maps {:resource/temp-ref ?n}, where ?n is a keyword that uses our prefixes."
+  [triples long2short]
+  (letfn [(convert [v & {:keys [ref?]}]
+            (cond (and (symbol? v)
+                       (re-matches #"^_[0-9a-f\-]+" (name v)))        (keyword "temp" (str "t" (-> v name (subs 1))))
+
+                  (and (string? v)
+                       (re-matches #"<http://.*" v))                  (let [[success base nam]
+                                                                            (re-matches #"^<(http://[^#]*)#?(.*)>$" (str v))]
+                                                                        (if (and success (not-empty nam))
+                                                                          (if-let [prefix (get long2short base)]
+                                                                            (let [res (keyword prefix nam)]
+                                                                              (if (and ref? (not= res :rdf/nil))
+                                                                                {:resource/temp-ref res}
+                                                                                res))
+                                                                            (keyword base nam)),
+                                                                          (if-let [onto-kw (onto-keyword v)]
+                                                                            (if ref?
+                                                                              {:resource/temp-ref (onto-keyword v)}
+                                                                              onto-kw)
+                                                                            (do (log! :warn (str "Keywordizing triple: ambiguous:" v))
+                                                                                (keyword "BUG" (str v))))))
+                  (string? v)                                         v
+                  (number? v)                                         v
+                  (boolean? v)                                        v
+                  (keyword? v)                                        (cond (= \# (-> v name (get 0)))
+                                                                            (keyword (namespace v) (-> v name (subs 1))),
+                                                                            ;; :owl/import is like this. Non-readable!
+                                                                            (= "" (name v)) (keyword "namespace" (namespace v)),
+                                                                            :else v)
+                  (= (type v) ont_app.vocabulary.lstr.LangStr)        (str v)))]
+    (for [{:syms [?x ?y ?z] :as _triple} triples]
+      (let [cx (convert ?x)
+            cy (convert ?y)
+            cz (if (real-keyword? cy) (convert ?z) (convert ?z :ref? true))]
+        ;; ToDo: Write spec for triple.
+        (vector cx cy cz)))))
 
 ;;;---- Operating on the keywordized dvecs -----------------------------------------------
 (defn temp-id? [k]
@@ -304,24 +307,23 @@
     result))
 
 (defn learn-schema!
-  "Create a schema from what we know about the owl, rdfs, and rdf parts
-  plus any additional triples created by ontologies."
-  [dvecs conn]
-  (let [known-property?   (into @single-valued-property? @multi-valued-property?)
+  "Using the dvecs, return schema maps from what we know about the owl, rdfs, and rdf parts
+   plus any additional triples created by ontologies."
+  [dvecs]
+  (let [known-property? (-> @single-valued-property?
+                            (into @multi-valued-property?)
+                            (into not-stored-property?))
         examples          (remove #(known-property? (nth % 1)) dvecs)
         unknown-properties (->> examples (mapv second) distinct)
         learned (atom [])]
     (doseq [prop unknown-properties]
-      (when-not (not-stored-property? prop)
-        (when (not-any? #(= prop (:db/ident %)) @full-schema)
-          (let [spec #:db{:ident prop
-                          :cardinality (learn-cardinality prop examples)
-                          :valueType   (learn-type prop examples)
-                          :app/origin :learned}]
-            (log! :debug (str "learned: " spec))
-            (swap! learned #(conj % spec))
-            (swap! full-schema #(conj % spec))))))
-    (transact? conn @learned)))
+      (let [spec #:db{:ident prop
+                      :cardinality (learn-cardinality prop examples)
+                      :valueType   (learn-type prop examples)
+                      :app/origin :learned}]
+        (log! :info (str "learned property:\n" (with-out-str (pprint spec))))
+        (swap! learned #(conj % spec))))
+    @learned))
 
 (defn box-value
   "Boxing is the process of converting a value type to the type object.
@@ -340,7 +342,9 @@
 ;;;--------------------------------- create and operate on the dmaps -----------------------
 (defn triples2maps
   "Iterate through the triples returning a map keyed by the RDF resource (keyword) represented."
-  [dvecs rdf-lists]
+  [dvecs rdf-lists learned-properties]
+  (swap! single-valued-property? into (filter #(= (:db/cardinality %) :db.cardinality/one) learned-properties))
+  (swap! multi-valued-property? into (filter #(= (:db/cardinality %) :db.cardinality/many) learned-properties))
   (reduce (fn [m [o a v :as triple]]
             (let [v (as-> v ?v
                       (or (get rdf-lists ?v) ?v)
@@ -452,11 +456,11 @@
    Stubs for all :resource/iris were transacted to the DB.
    This recursively replaces :resource/temp-ref with their DH entity ID.
    Argument is a vector of maps, one for each resource."
-  [dmapv conn]
+  [conn-atm dmapv]
   (let [save-obj (atom nil)]
     (letfn [(rtr-aux [x]
               (cond (map? x) (if (contains? x :resource/temp-ref) ; then the map has only this key; replace it.
-                               (lookup-resource (:resource/temp-ref x) conn)
+                               (lookup-resource (:resource/temp-ref x) conn-atm)
                                (reduce-kv (fn [m k v]
                                             (if (nil? v)
                                               (throw (ex-info "Failed to resolve temps:" {:obj x :k k :m m}))
@@ -468,150 +472,143 @@
       ;; We do it this way to catch errors at finer granularity.
       (mapv #(do (reset! save-obj %) (rtr-aux %)) dmapv))))
 
-(defn store-onto!
-  "Transform RDF triples in argument jena-maps, resolve rdf/List, create maps of resources.
-   Then store it."
-  [conn jena-maps]
-  (let [dvecs (mapv keywordize-triple jena-maps)]
-    (learn-schema! dvecs conn)
-    (let [rdf-lists (resolve-rdf-lists dvecs)
-          dmapv (->> (triples2maps dvecs rdf-lists) ; returns a map indexed by resource or Jena ID in "temp" ns.
-                     (reduce-kv (fn [res k v] (conj res (assoc v :resource/iri k))) []) ; give them all a :resource/iri.
-                     resolve-temps) ; gets and returns a vec of maps.
-          resources (reduce-kv (fn [res _ v] (if-let [id (:resource/iri v)] (conj res id) res)) #{} dmapv)]
-      (transact? conn (mapv (fn [x] {:resource/iri x
-                                     :resource/name (name x)
-                                     :resource/namespace (namespace x)}) resources)) ; transact resource stubs.
-      (transact? conn (resolve-temp-refs dmapv conn)))))
+(defn add-loaded-note!
+  "Add a note in the DB for each onto that is loaded: :source/loaded? = true."
+  [conn-atm onto-info]
+  (doseq [[_ {:keys [uri ref-only?]}] (seq onto-info)]
+    (when-not ref-only?
+      (if-let [eid (d/q `[:find ?e .
+                          :in $ ?uri
+                              :where [?e :source/long-name ?uri]]
+                        @conn-atm uri)]
+        (try (d/transact conn-atm [[:db/add eid :source/loaded? true]])
+             (log! :info (str "DB-loaded onto: " uri))
+             (catch Exception e
+               (log! :error (str "Failure transacting:" [:db/add eid :source/loaded? true] "\n" e))))
+        (log! :error  (str "Did not find onto: " uri))))))
 
-#_(defn prefix-maps
-  "Define a map relating prefixes to URIs found by means of the Jena.
-   Check whether the DB already has a short-name for that resource (user might have specified it).
-   If a short-name already exists, keep it. (Both long and short are db.unique db.identity,
-   intentionally, so you really can't change it anyway."
-  [jkb conn]
-  (let [jena-names (as-> (kb/.root-ns-map jkb) ?x
-                     (dissoc ?x "")
-                     (reduce-kv (fn [res sname lname]
-                                  (conj res {:resource/iri (onto-keyword lname)
-                                             :source/short-name sname
-                                             :source/long-name (-> (re-matches #"^([^#]+)#?" lname) second)}))
-                                []
-                                ?x))
-        defined-names (sources conn :l2s true)
-        result (atom [])]
-    (doseq [name-map jena-names]
-      (let [lname (:source/long-name name-map)
-            sname (:source/short-name name-map)
-            defined-sname (get defined-names lname)]
-        (if (and (contains? defined-names lname) (not= sname defined-sname))
-          (log! :warn (str "Source uses " sname " as prefix for " lname " but " defined-sname " is already used for that."))
-          (swap! result conj name-map))))
-    @result))
+(defn store-from-info!
+  "Store schema and information from the onto-info.
+   Return a map of 'long2short' - URI to prefixes."
+  [conn-atm onto-info]
+  (let [all-prefixes (merge  {:owl2 "http://www.w3.org/2006/12/owl2"
+                              :rdf  "http://www.w3.org/1999/02/22-rdf-syntax-ns"
+                              :rdfs "http://www.w3.org/2000/01/rdf-schema"}
+                             (update-vals onto-info :uri))
+        db-obj (reduce-kv (fn [res sname lname]
+                            (conj res {:resource/iri (onto-keyword lname)
+                                       :source/short-name (name sname)
+                                       :source/long-name lname}))
+                          []
+                          all-prefixes)]
+    (transact? conn-atm db-obj)
+    (-> all-prefixes
+        set/map-invert
+        (update-vals name))))
 
-(defn prefix-maps
-  "Define a map relating prefixes to URIs found by means of the Jena.
-   Check whether the DB already has a short-name for that resource (user might have specified it).
-   If a short-name already exists, keep it. (Both long and short are db.unique db.identity,
-   intentionally, so you really can't change it anyway."
-  [jkb conn]
-  (let [jena-names (as-> {} #_(kb/.root-ns-map jkb) ?x ; <=========================================================================
-                     (dissoc ?x "")
-                     (reduce-kv (fn [res sname lname]
-                                  (conj res {:resource/iri (onto-keyword lname)
-                                             :source/short-name sname
-                                             :source/long-name (-> (re-matches #"^([^#]+)#?" lname) second)}))
-                                []
-                                ?x))
-        defined-names (sources conn :l2s true)
-        result (atom [])]
-    (doseq [name-map jena-names]
-      (let [lname (:source/long-name name-map)
-            sname (:source/short-name name-map)
-            defined-sname (get defined-names lname)]
-        (if (and (contains? defined-names lname) (not= sname defined-sname))
-          (log! :warn (str "Source uses " sname " as prefix for " lname " but " defined-sname " is already used for that."))
-          (swap! result conj name-map))))
-    @result))
+(defn transact-iri!
+  "Commit the :resource/iri (a DB key) so that we can later add the full dmapv.
+   This is like DH lookup, except I understand it / it works."
+  [conn-atm dmapv]
+  (let [iri-objects (reduce (fn [res m]
+                              (if-let [iri (:resource/iri m)]
+                                (conj res (-> {}
+                                              (assoc :resource/iri iri)
+                                              (assoc :resource/name (name iri))
+                                              (assoc :resource/namespace (namespace iri))))
+                                (do
+                                  (log! :warn (str "No IRI for " (with-out-str (pprint m))))
+                                  res)))
 
-(defn arg-prefix-maps
-  "Define a map relating prefixes to URIs for the create-db ontos argument."
-  [ontos]
-  (reduce-kv (fn [res k v]
-               (conj res {:resource/iri (-> v :uri onto-keyword)
-                          :source/short-name k
-                          :source/long-name (:uri v)}))
-               []
-               ontos))
+                            []
+                            dmapv)]
+    (transact? conn-atm iri-objects)))
 
-(defn mark-as-stored
-  "Add :source/loaded? true to the onto spec"
-  [onto-spec conn]
-  (let [eid (d/q `[:find ?e . :where [?e :source/long-name ~(:uri onto-spec)]] @conn)]
-    (d/transact conn [[:db/add eid :source/loaded? true]])))
+#_(defn transact-iri!
+  "Commit the :resource/iri (a DB key) so that we can later add the full dmapv."
+  [conn-atm dmapv]
+  (let [lookups (reduce (fn [res m]
+                          (if-let [iri (:resource/iri m)]
+                            (conj res [:db/add -1 :resource/iri iri])
+                            (do
+                              (log! :warn (str "No IRI for " (with-out-str (pprint m))))
+                              res)))
+
+                        []
+                        dmapv)]
+    (reset! diag lookups)
+    #_(doseq [obj lookups] (d/transact conn-atm [obj])) ; lookup-refs MUST be one at a time in datahike!?!
+    (transact? conn-atm lookups)))
+
+
+;;;     (d/transact conn {:tx-data [{:db/id eid :project/processes full-obj}]})
+;;;     (d/transact conn (->> backup-file slurp edn/read-string))
+(defn transact-objects!
+  "Write the ontology objects to the DB."
+  [conn-atm dmapv]
+  (letfn [(obj-eid [obj]
+            (d/q '[:find ?eid .
+                   :in $ ?iri
+                   :where [?eid :resource/iri ?iri]]
+                 @conn-atm (:resource/iri obj)))]
+    (doseq [obj dmapv]
+      (let [eid (obj-eid obj)]
+        (if eid
+          (try
+            #_(d/transact conn-atm {:tx-data (-> (for [[k v] (seq obj)] [:db/add eid k v]) vec)})
+            (d/transact conn-atm {:tx-data [(merge obj {:db/id eid})]})
+            (catch Exception e
+              (log! :error (str e "\n" (with-out-str (pprint (merge obj {:db/id eid})))))))
+          (log! :error (str "Could not write object; no eid:\n" (with-out-str obj))))))))
 
 ;;;------------------------ API functions ---------------------------------
-#_(defn create-db!
-  "If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
-   Otherwise, just set the connection atom, conn.
-   BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
-  [db-cfg ontos & {:keys [check-sites check-sites-timeout rebuild? user-attrs] :or {check-sites-timeout 15000}}]
-  (reset-for-new-db!)
-  (let [site-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)
-        load-ontos (reduce-kv (fn [m k v] (if (:ref-only? v) m (assoc m k v))) {} ontos)]
-    (cond (and rebuild? site-ok?)
-          (do (d/delete-database db-cfg)
-              (d/create-database db-cfg)
-              (let [conn-atm (d/connect db-cfg)]
-                (log! :info "Initializing a fresh DB.")
-                (transact? conn-atm @full-schema)
-                (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
-                (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
-                (doseq [onto-spec (vals load-ontos)]
-                  (let [jkb (load-jena onto-spec)
-                        jena-maps {} #_(sparql/query jkb '((?/x ?/y ?/z)))]
-                    (transact? conn-atm (prefix-maps jkb @conn-atm))  ; URI to prefix maps from Jena loading the source
-                    (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
-                    (store-onto! conn-atm jena-maps)
-                    (mark-as-stored onto-spec conn-atm)))
-                 (alter-var-root (var *conn*) (fn [_] @conn-atm)))),
-          (not site-ok?) (log! :error "Could not connect to a site needed for ontologies. Not rebuilding DB."),
-          (d/database-exists? db-cfg)
-          (alter-var-root (var *conn*) (fn [_] @(d/connect db-cfg)))
-          :else (log! :warn "There is no DB to connect to."))))
-
+;;;  dvecs - Jena data stored as a vector of 3-element vectors.
+;;;  dmaps - dvecs data reorganized as a map indexed by :resource/iri or a keyword in the "temp" from Jena.
+;;;  dmapv - dmaps data reorganized as a vector of maps with temps resolved.
+;;; (core/create-db! (-> "project-ontologies.edn" io/resource slurp edn/read-string) big-cfg :reload-graph? false)
 (defn create-db!
-  "If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
+  "There are a few steps to this high-level API function:
+      1) Create some DB content based solely on the onto-info map (not the ontologies to which it refers)
+      2) Create the RDF graph (load-graph!); make triples (dvecs).
+      3) Create triples from the graph (dmaps and dmapv).
+      4) Learn additional DB attributes from the graph.
+      5) Store the triples.
+
+   If rebuild? is true, read OWL with Jena and write it into a Datahike DB.
    Otherwise, just set the connection atom, conn.
    BTW, if this doesn't get a response within 15 secs from slurping odp.org, it doesn't rebuild the DB."
-  [db-cfg graph-atm & {:keys [user-attrs]}]
-  (reset-for-new-db!)
-  (d/delete-database db-cfg)
-  (d/create-database db-cfg)
-  (let [conn-atm (d/connect db-cfg)]
-    (log! :info "Initializing a fresh DB.")
-    (transact? conn-atm @full-schema)
-    (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
-    (transact? conn-atm (arg-prefix-maps ontos)) ; URI to prefix maps for argument ontologies
-    (let [jena-maps (q/run @graph-atm '[:bgp [?x ?y ?z]])]
-      (transact? conn-atm (prefix-maps jkb @conn-atm))  ; URI to prefix maps from Jena loading the source
-      (update-long2short! conn-atm) ; This is for speed in keywordize-triple.
-      (store-onto! conn-atm jena-maps))))
-
+  [onto-info db-cfg & {:keys [check-sites check-sites-timeout reload-graph? user-attrs]
+                       :or {check-sites-timeout 15000}}]
+  (let [sites-ok? (if check-sites (every? #(site-online? % check-sites-timeout) check-sites) true)]
+    (if sites-ok?
+      (do (d/delete-database db-cfg)
+          (d/create-database db-cfg)
+          (transact? (d/connect db-cfg) static-schema)
+          (log! :info "Initializing a fresh ontology DB.")
+          (let [conn-atm (d/connect db-cfg)
+                long2short (store-from-info! conn-atm onto-info)
+                graph (if reload-graph? (load-graph! onto-info) @graph-memo)
+                jena-triple-maps (q/run graph '[:bgp [?x ?y ?z]])
+                dvecs (keywordize-triples jena-triple-maps long2short)
+                learned (learn-schema! dvecs)
+                rdf-lists (resolve-rdf-lists dvecs)
+                dmaps (->> (triples2maps dvecs rdf-lists learned) ; returns a map indexed by resource or Jena ID in a "temp" ns.
+                           (reduce-kv (fn [res k v] (conj res (assoc v :resource/iri k))) []) ; give them all a :resource/iri.
+                           resolve-temps)
+                dmapv (resolve-temp-refs conn-atm dmaps)]
+            (transact? conn-atm learned) ; You can add schema to DH anytime! (But you can't change schema.)
+            (swap! full-schema into learned)
+            (transact-iri! conn-atm dmapv)
+            (when user-attrs (->> user-attrs (mapv #(assoc % :app/origin :user)) (transact? conn-atm)))
+            (transact-objects! conn-atm dmapv)
+            (add-loaded-note! conn-atm onto-info)
+            conn-atm))
+      (log! :warn "Did not rebuild because one or more sites did not respond."))))
 
 (defn resource-ids ; ToDo should/could this be lazy?
   "Return a vector of resource keywords"
   [conn]
   (d/q '[:find [?name ...] :where [_ :resource/iri ?name]] conn))
-
-(defn sources
-  "Return maps describing what was loaded"
-  [conn & {:keys [l2s]}]
-  (let [eids (d/q '[:find [?e ...] :where [?e :source/long-name _]] conn)
-        maps (dp/pull-many conn '[*] eids)]
-    (if l2s
-      (->> maps (reduce (fn [res m] (assoc res (:source/long-name m) (:source/short-name m))) {}))
-      maps)))
 
 (defn schema-attributes
   "Return a vector of maps of learned or user schema elements.
@@ -619,25 +616,9 @@
      conn     - a database connection.
      :origin  - an optional  keyword argument consisting of a set containing any of
                 #{:all, :learned :user}. The default value for this argument is #{:learned :user}."
-  [conn & {:keys [origin] :or {origin #{:learned :user}}}]
-  (let [attrs (d/q '[:find (pull ?e [*]) :where [?e :db/ident _]] conn)]
+  [conn-atm & {:keys [origin] :or {origin #{:learned :user}}}]
+  (let [attrs (d/q '[:find (pull ?e [*]) :where [?e :db/ident _]] @conn-atm)]
     (cond->> attrs
       true (map first)
       (not (origin :all)) (filter #(origin (:app/origin %)))
       true (sort-by :db/id))))
-
-;;; ToDo: Decide whether this is useful!
-#_(defn class-order
-  "Return the map as a sorted map with nice ordering of keys for humans."
-  [m]
-  (into (sorted-map-by
-         (fn [k1 k2]
-           (cond (= k1 :resource/iri) -1
-                 (= k2 :resource/iri) +1
-                 (= k1 :rdf/type) -1
-                 (= k2 :rdf/type) +1
-                 (= k1 :rdfs/subClassOf) -1
-                 (= k2 :rdfs/subClassOf) +1
-                 (= k1 :owl/comment) +1
-                 (= k2 :owl/comment) +1)))
-         m))

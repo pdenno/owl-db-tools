@@ -49,7 +49,7 @@
   []
   (tel/add-handler! :default/console (tel/handler:console {:output-fn custom-console-output-fn}))
   (tel-log/tools-logging->telemere!)  ;; Send tools.logging through telemere. Check this with (tel/check-interop)
-  (tel/streams->telemere!)           ;; likewise for *out* and *err* but "Note that Clojure's *out*, *err* are not necessarily automatically affected."
+  (tel/streams->telemere!)            ;; likewise for *out* and *err* but "Note that Clojure's *out*, *err* are not necessarily automatically affected."
   (tel/event! ::config-log {:level :info :msg (str "Logging configured:\n" (with-out-str (pprint (tel/check-interop))))})
   ;; The following is needed because of datahike; no timbre-logging->telemere!
   (timbre/set-config! (assoc timbre/*config* :min-level [[#{"datahike.*"} :error]
