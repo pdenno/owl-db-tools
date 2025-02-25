@@ -28,7 +28,7 @@
 (defonce graph-memo (atom nil))
 (def ^:diag diag (atom nil))
 
-;;; (-> "project-ontologies.edn" io/resource slurp edn/read-string (core/load-graph! ggg))
+;;; (load-graph! (-> "data/project-ontologies.edn" slurp clojure.edn/read-string))
 (defn load-graph!
   "Given a map of entries like this:
      {:pla    {:uri \"http://www.ontologydesignpatterns.org/ont/dlp/Plans.owl\"},...
