@@ -47,7 +47,8 @@
     Returns an Jena respresentation of an RDF graph. Resets the core/graph-memo atom."
   [info-map]
   (let [graph (aa/graph :simple)]
-    (doseq [[alias {:keys [uri access ref-only?] :as info}] info-map]
+    (doseq [[alias {:keys [uri access ref-only?] :as info}] (seq info-map)]
+      (log! :info (str "Loading " alias))
       (try
         (reg/prefix (-> alias name symbol) uri) ; See the result of this in reg/*registry*
         (if access ; the value of access is a local pathname.
